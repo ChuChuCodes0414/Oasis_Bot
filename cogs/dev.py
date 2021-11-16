@@ -176,15 +176,5 @@ class Dev(commands.Cog):
         embed.set_footer(text = EmptyEmbed)
         await message.edit(embed = embed)
 
-            
-
-
-
-
-
-
-    
-
-
 def setup(client):
     client.add_cog(Dev(client))

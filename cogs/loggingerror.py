@@ -5,6 +5,8 @@ import sys
 import traceback
 import math
 import datetime
+import uuid
+import os
 
 class LoggingError(commands.Cog):
     '''
@@ -42,6 +44,8 @@ class LoggingError(commands.Cog):
 
         if isinstance(error, commands.CommandNotFound):
             return
+        
+        errorid = uuid.uuid4()
 
         if isinstance(error, commands.BotMissingPermissions):
             missing = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
@@ -94,23 +98,47 @@ class LoggingError(commands.Cog):
             await self.send_error_embed(ctx,"Looks like I am missing permissions to complete your command.")
             return
 
-        await self.send_error_embed(ctx,"I have no idea how you got here, but it seems your error was not traced! If this occurs frequently, please feel free to join the [support server](https://discord.com/invite/9pmGDc8pqQ) and report the bug!")
+
+        embed = discord.Embed(title = "Uh oh! Seems like you got an uncaught excpetion.",description = "I have no idea how you got here, but it seems your error was not traced! If this occurs frequently, please feel free to join the [support server](https://discord.com/invite/9pmGDc8pqQ) and report the bug!",color = discord.Color.red())
+        if len(''.join(traceback.format_exception_only(type(error), error))) < 4000:
+            embed.add_field(name = "Error Details:",value = f"```{''.join(traceback.format_exception_only(type(error), error))}```")
+        else:
+            embed.add_field(name = "Error Details:",value = f"```Error details are too long to display! Join the support server with your error code for more details.```")
+        embed.add_field(name = "Error ID",value = errorid,inline = False)
+        try:
+            await ctx.reply(embed = embed)
+        except:
+            try:
+                await ctx.send(embed = embed)
+            except:
+                pass
 
         # ignore all other exception types, but print them to stderr
-        channel = self.client.get_channel(int(850553146421149756))
+        if self.client.user.id == 830817370762248242:
+            channel = self.client.get_channel(int(850553146421149756))
+        else:
+            channel = self.client.get_channel(int(908467248719605763))
+            
 
         embed = discord.Embed(title = f'⚠ There was an error that was not traced!',description = f'On Command: {ctx.command.name}',color = discord.Color.red())
-        embed.add_field(name = "Command Invoke Details",value = f'**Guild ID:** {ctx.guild.id}\n**User Information:** {ctx.author.mention} ({ctx.author.id})\n**Jump URL:** {ctx.message.jump_url}\n**Command Used:** {ctx.message.content}',inline = False)
+        embed.add_field(name = "Command Invoke Details",value = f'**Guild Info:** {ctx.guild.name} ({ctx.guild.id})\n**User Information:** {ctx.author.name} | {ctx.author.mention} ({ctx.author.id})\n**Jump URL:** {ctx.message.jump_url}\n**Command Used:** {ctx.message.content}\n**Error ID:** {errorid}',inline = False)
         errordetails = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
-        #embed.add_field(name = "Command Error Log",value = f'```{errordetails}```')
+        if len(errordetails) < 4000:
+            embed.add_field(name = "Command Error Log",value = f'```{errordetails}```')
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
+            embed.timestamp = datetime.datetime.utcnow()
+            await channel.send(embed = embed)
+        else:
+            f =  open(f'errorlogging\{errorid}.txt', 'w')
+            f.write(errordetails)
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
+            embed.timestamp = datetime.datetime.utcnow()
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon_url)
-
-        await channel.send(embed = embed)
-
+            await channel.send(embed = embed,file = discord.File("errorlogging\\" + str(errorid) + ".txt"))
+            f.close()
+            os.remove(f"errorlogging\{errorid}.txt")
+        
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 

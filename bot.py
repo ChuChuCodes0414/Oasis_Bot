@@ -8,10 +8,11 @@ from discord.ext import commands, tasks
 from itertools import cycle
 import firebase_admin
 from firebase_admin import db
-from firebase_admin import auth
-from firebase_admin.auth import UserRecord
 from discord_components import DiscordComponents, Button
 import sensitive
+import asyncio
+from discord.embeds import EmptyEmbed
+import time
 
 beta = True
 
@@ -96,6 +97,7 @@ else:
 @client.event
 async def on_ready():
     change_status.start()
+    check_status.start()
     DiscordComponents(client)
     print('Bot is online.')
     
@@ -119,6 +121,76 @@ async def on_guild_remove(guild):
 @tasks.loop(seconds=10)
 async def change_status():
     await client.change_presence(activity=discord.Game(next(status)))
+
+@tasks.loop(minutes = 30,reconnect = True)
+async def check_status():
+    errors = ""
+    apiping = round(client.latency*1000)
+    if apiping >= 1000:
+        errors += f"⚠ API Ping Alert: {apiping}ms\n"
+    channel = client.get_channel(908473269219373127)
+    initial = await channel.send(embed = discord.Embed(description = "Starting Bot Check"))
+    status = f"API Ping: `{apiping}ms`\n"
+    embed = discord.Embed(title = "Checking Bot Status <a:OB_Loading:907101653692456991>",description = status,color = discord.Color.random())
+    embed.set_footer(text = "Checking Real Ping...")
+    message = await channel.send(embed = embed)
+    latency = initial.created_at - message.created_at
+    status += f"Read Ping: `{latency.microseconds*0.001}ms`\n"
+    embed = discord.Embed(title = "Checking Bot Status <a:OB_Loading:907101653692456991>",description = status,color = discord.Color.random())
+    await message.edit(embed = embed)
+    if latency.microseconds*0.001 >= 10000:
+        errors += f"⚠ Realtime Ping Alert: {latency.microseconds*0.001}ms\n"
+
+    embed = discord.Embed(title = "Checking Database Status <a:OB_Loading:907101653692456991>",color = discord.Color.random())
+    databases = {"elead":"Event","modlogs":"Mod Logs","pepegabot":"Private Channels","modtracking":"Mod Tracking","settings":"Settings","giveaways":"Giveaway Donation","glogging":"Giveaway Logging","freeloader":"Freeloader","profile":"Profile","invites":"Invites","lottery":"Lottery"}
+    message = await channel.send(embed = embed)
+    for database,name in databases.items():
+        embed.add_field(name = f"{name} Database",value = f"Upload: <a:OB_Loading:907101653692456991>\nDownload: <a:OB_Loading:907101653692456991>\nDelete: <a:OB_Loading:907101653692456991>")
+        embed.set_footer(text = f"Checking {name} Database...")
+        await message.edit(embed = embed)
+
+        ref = db.reference("/",app = firebase_admin._apps[database])
+        try:
+            ref.child("test").set("test")
+            set1 = "<a:PB_greentick:865758752379240448>"
+        except:
+            set1 = "<a:PB_redtick:873384525202350090>"
+            errors += f"⚠ Database Upload Alert: {name}\n"
+        await asyncio.sleep(2)
+        embed.remove_field(-1)
+        embed.add_field(name = f"{name} Database",value = f"Upload: {set1}\nDownload: <a:OB_Loading:907101653692456991>\nDelete: <a:OB_Loading:907101653692456991>")
+        await message.edit(embed = embed)
+        try:
+            value = ref.child("test").get()
+            get1 = "<a:PB_greentick:865758752379240448>"
+        except:
+            get1 = "<a:PB_redtick:873384525202350090>"
+            errors += f"⚠ Database Download Alert: {name}\n"
+        await asyncio.sleep(2)
+        embed.remove_field(-1)
+        embed.add_field(name = f"{name} Database",value = f"Upload: {set1}\nDownload: {get1}\nDelete: <a:OB_Loading:907101653692456991>")
+        await message.edit(embed = embed)
+        try:
+            ref.child("test").delete()
+            delete1 = "<a:PB_greentick:865758752379240448>"
+        except:
+            delete1 = "<a:PB_redtick:873384525202350090>"
+            errors += f"⚠ Database Delete Alert: {name}\n"
+        await asyncio.sleep(2)
+        embed.remove_field(-1)
+        embed.add_field(name = f"{name} Database",value = f"Upload: {set1}\nDownload: {get1}\nDelete: {delete1}")
+        await message.edit(embed = embed)
+    embed.title = "Check Complete!"
+    embed.set_footer(text = EmptyEmbed)
+    await message.edit(embed = embed)
+
+    timestamp = "<t:" + str(int(time.time())) + ":F>"
+    timestamp2 = "<t:" + str(int(time.time())) + ":R>"
+    
+    if errors == "":
+        await channel.send(embed = discord.Embed(description = f"No errors found! Checking again in: 30 minutes\nCompleted At: {timestamp} | {timestamp2}"))
+    else:
+        await channel.send("<@&847289699487580161>",embed = discord.Embed(description = errors + f"\nCompleted At: {timestamp} | {timestamp2}"))
 
 
 @client.event
