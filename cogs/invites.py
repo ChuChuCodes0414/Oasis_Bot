@@ -72,16 +72,19 @@ class Invites(commands.Cog):
         build = ""
         date = member.joined_at
         unix = time.mktime(date.timetuple())
+        formatted = "<t:" + str(int(unix)) + ":F>"
         build += f"**Member Leaving Information:** {member.mention} ( `{member.id}` )\n"
         timedelta = datetime.utcnow() - member.joined_at
-        if timedelta.days >= 1:
-            build += f"**Joined at:** {unix} ({timedelta.days} days ago)\n"
-        elif timedelta.hours >= 1:
-            build += f"**Joined at:** {unix} ({timedelta.hours} hours ago)\n"
-        elif timedelta.minutes >= 1:
-            build += f"**Joined at:** {unix} ({timedelta.minutes} minutes ago)\n"
+        if timedelta.days >= 7:
+            build += f"**Joined at:** {formatted} ({timedelta.days//7} weeks ago)\n"
+        elif timedelta.days >= 1:
+            build += f"**Joined at:** {formatted} ({timedelta.days} days ago)\n"
+        elif timedelta.seconds >= 3600:
+            build += f"**Joined at:** {formatted} ({timedelta.seconds//3600} hours ago)\n"
+        elif timedelta.seconds >= 60:
+            build += f"**Joined at:** {formatted} ({timedelta.seconds//60} minutes ago)\n"
         else:
-            build += f"**Joined at:** {unix} (under one minute ago)\n"
+            build += f"**Joined at:** {formatted} (under one minute ago)\n"
 
         if inviter and inviter == "vanity":
             build += f"**Invited By:** Vanity Link"
@@ -332,7 +335,7 @@ class InviteTracker():
             vanity = self._cache[member.guild.id]['vanity']
             new_vanity = await member.guild.vanity_invite()
             if new_vanity.uses - vanity.uses == 1:
-                self._cache[member.guild.id]['vanity'] += 1
+                self._cache[member.guild.id]['vanity'] = new_vanity
                 return "vanity"
         except:
             pass

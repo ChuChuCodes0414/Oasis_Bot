@@ -307,7 +307,7 @@ class Lottery(commands.Cog):
         embed.set_footer(text = "View the above entry methods to enter.")
         await ctx.send(f"Alright, lottery setup! Beginning now in {channel.mention}.")
         await channel.send(embed = embed)
-        ref.child(str(ctx.guild.id)).child(str(channel.id)).set({"channel":ctx.channel.id,"active":True,"host":host.id,"entrymethods":entrymethods,"maxentries":maxentries,"prize":prize})
+        ref.child(str(ctx.guild.id)).child(str(channel.id)).set({"channel":channel.id,"active":True,"host":host.id,"entrymethods":entrymethods,"maxentries":maxentries,"prize":prize})
         self.active_channels.append(channel.id)
 
     @commands.command(description = "Manually give entries to a user.",help = "grantentries <entry amount> <member>")

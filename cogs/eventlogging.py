@@ -176,31 +176,11 @@ class EventLogging(commands.Cog):
 
     @commands.command(description = "Shows the amount of events you or another user has done.",help = "eamount <user>")
     @eman_role_check()
-    async def eamount(self,ctx,user = None):
-        user = user or ctx.message.author.id
-    
-        if str(user).isnumeric():
-            guild = ctx.guild
-            user = guild.get_member(int(user))
-        else:
-            user = await commands.converter.MemberConverter().convert(ctx,user)
-
+    async def eamount(self,ctx,user:discord.Member = None):
+        user = user or ctx.message.author
         amount = await self.get_amount(ctx,user.id)
-
-        embed=discord.Embed(title=f"Event Amount for {user.name}",description=f"`{amount}` Events", color=discord.Color.green())
-
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed=discord.Embed(description =f"Event Amount for {user}: `{amount}` Events",color=discord.Color.random())
         await ctx.reply(embed=embed)
-
-    @commands.command(hidden=True)
-    @commands.is_owner()
-    async def ereset(self,ctx):
-        await self.reset_log(ctx)
-        await ctx.reply("Reset logging database")
-    @ereset.error
-    async def ereset_error(self,ctx, error):
-        await ctx.reply(f'There was an error running this command: \n`{error}`')
 
     @commands.command(description = "Start an event with a ping and an embed. Will also increment your log tracking by one.",help = "estart <time> <eventype>/<requirement>/<eventprize>/<channel>/<donor>/<message>")
     @eman_role_check()
@@ -217,7 +197,9 @@ class EventLogging(commands.Cog):
         'skribble': 'Test your drawing skills, and try to identify what others are drawing!',
         'uno':'Everyone is dealt cards at the beginning of the match. You can play a card of the same type or color, the person with no cards first wins! Use `uno help` for more information.',
         'fight':'Fight another chosen opponent, or the sponsor, for the prize of the event! Fight details will be specified in the event channel',
-        'gartic':'Try to identify the drawing that is shown before everyone else! But be careful, if you fail to identify a round, your game is over!'
+        'gartic':'Try to identify the drawing that is shown before everyone else! But be careful, if you fail to identify a round, your game is over!',
+        'acro':'Come up with a funny acronym for a set of letters provided, and then vote on which one is the best!',
+        'nunchi':'Count up from a number in order, but if you are the second person to say that number you are eliminated!'
         }
         await ctx.message.delete()
 
@@ -245,33 +227,23 @@ class EventLogging(commands.Cog):
             else:
                 timebuild = time + " seconds"
 
+        channel = await commands.converter.TextChannelConverter().convert(ctx,location.strip())
+        donor = await commands.converter.MemberConverter().convert(ctx,donor.strip())
+
         if event in eventslist.keys():
             eventinfo = eventslist[event]
         else:
             eventinfo = event
 
         #### Create the initial embed object ####
-        embed=discord.Embed(title="It's Event Time",description=f"The {event} is about to begin! Get ready.", color=discord.Color.green())
-
-        # Add author, thumbnail, fields, and footer to the embed
+        embed=discord.Embed(title="<a:event:923046835952697395> It's Event Time <a:event:923046835952697395>" ,color=discord.Color.random())
+        build = ""
         embed.set_author(name="Hosted by " + ctx.author.display_name,icon_url=ctx.author.avatar_url)
-
         embed.set_thumbnail(url=ctx.guild.icon_url)
-
-        
-        embed.add_field(name="Event Info", value=f"{eventinfo}", inline=False) 
-        embed.add_field(name="Requirement", value=requirement, inline=True)
-        embed.add_field(name="Prize",value=amount,inline=True)
-
-        if location.isnumeric():
-            embed.add_field(name="Channel:",value=f'<#{location}>',inline=True)
-        else:
-            embed.add_field(name="Channel:",value=f'{location}',inline=True)
-        embed.add_field(name="Donor:",value=f'{donor}',inline=False)
-        embed.add_field(name="Message:",value=f'{message}',inline=False)
-        embed.add_field(name="Time Until Event:",value=f'{timebuild}',inline=False)
-
-        embed.set_footer(text="Good luck!")
+        build += f"**Event Type:** {event}\n**Event Info:** {eventinfo}\n**Requirement:** {requirement}\n**Prize:** {amount}\n**Channel:** {channel.mention}\n"
+        build += f"**Donor:**{donor.mention}\n**Message:** {message}"
+        embed.set_footer(text=f"The event begins in {timebuild}")
+        embed.description = build
 
         user = ctx.message.author.id
         output = await self.add_log(ctx,user)
@@ -284,7 +256,6 @@ class EventLogging(commands.Cog):
             channel = ctx.guild.get_channel(logchannel)
             if channel:
                 await self.post_log(ctx,channel,message,event,amount,donor)
-
 
     @commands.command(description = "Set the log amount for a specified user",help = "setlog <member> <amount>")
     @commands.has_permissions(administrator= True)
@@ -322,8 +293,6 @@ class EventLogging(commands.Cog):
             return await ctx.reply("Something went wrong. Are you sure that is a valid member that has event data?")
         await ctx.reply(f'Removed logs for <@{member}>!')
         
-
-    
 
 
 def setup(client):

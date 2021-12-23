@@ -133,51 +133,34 @@ class PrivateChannels(commands.Cog):
 
         })
 
-
     @commands.command(aliases= ['ac'],description = "Add a member to the current channel.",help = "addchannel <member>")
     @pchannel_category_check()
     @commands.has_permissions(manage_channels= True)
-    async def addchannel(self,ctx, member):
-        channel = ctx.channel
-        if str(member).isnumeric():
-            guild = ctx.guild
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        if not member:
-            return await ctx.reply("That does not look like a valid person.")
+    async def addchannel(self,ctx, member:discord.Member):
         if member.bot:
-            return await ctx.reply("Wait a minute, you can't add a bot to this channel.")
-            
-        channel = channel or ctx.channel
+            embed = discord.Embed(description = "Come on, you can't add a bot to this channel. Find a member instead.",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
+        channel = ctx.channel
         output = await self.add_channel(ctx,channel.id,member.id)
         if output:
             overwrite = channel.overwrites_for(member)
-            #overwrite.send_messages = True
             overwrite.read_messages = True
             await channel.set_permissions(member, overwrite=overwrite)
-            await ctx.reply(f"<a:PB_greentick:865758752379240448> Successfully added {member.name} to {channel.mention}.")
+            embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Successfully added {member.name} to {channel.mention}.",color = discord.Color.green())
+            await ctx.reply(embed = embed)
 
     @commands.command(aliases= ['rc'],description = "Remove a member from the current channel.",help = "removechannel <member>")
     @pchannel_category_check()
     @commands.has_permissions(manage_channels= True)
-    async def removechannel(self,ctx, member):
+    async def removechannel(self,ctx, member:discord.Member):
         channel = ctx.channel
-        store = member
         limit = await self.get_channel_limit(ctx,ctx.channel.id)
         if not limit:
-            return await ctx.reply("Does not seem like this channel is set up.")
-        if str(member).isnumeric():
-            guild = ctx.guild
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-        if (member == None):
-            await self.remove_channel(ctx,channel.id,int(store))
-            return await ctx.reply(f"<a:PB_greentick:865758752379240448> It seems this member is not in the server anymore. Successfully removed {store} from {channel.mention}.")
+            embed = discord.Embed(description = "This channel is not setup as a private channel.",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
         if (member.id == await self.get_channel_owner(ctx,channel.id)):
-            await ctx.reply(f"You cannot remove the owner of this channel!")
+            embed = discord.Embed(description = "You cannot remove the owner of this channel!",color = discord.Color.red())
+            await ctx.reply(embed = embed)
         else:
             channel = channel or ctx.channel
             await self.remove_channel(ctx,channel.id,member.id)
@@ -185,7 +168,8 @@ class PrivateChannels(commands.Cog):
             #overwrite.send_messages = False
             overwrite.read_messages = False
             await channel.set_permissions(member, overwrite=None)
-            await ctx.reply(f"<a:PB_greentick:865758752379240448> Successfully removed {member.name} from {channel.mention}.")
+            embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Successfully removed {member.name} from {channel.mention}.",color = discord.Color.green())
+            await ctx.reply(embed = embed)
 
     @commands.command(aliases = ['abused'],description = "Got abused? Left the server? Well you probably want back into your private channels. This command will help you out with that.",help = "fixchannel <member>")
     @commands.has_permissions(administrator= True)
@@ -205,7 +189,7 @@ class PrivateChannels(commands.Cog):
 
         build = "**Added to:**\n"
         ownerbuild = "**Was set the owner of:**\n"
-
+        error = "**Could not add to:**"
         for channel in allchannels:
             if userid in allchannels[channel]:
                 channel_object = ctx.guild.get_channel(int(channel))
@@ -217,32 +201,29 @@ class PrivateChannels(commands.Cog):
                             overwrite.read_messages = True
                             overwrite.manage_messages = True
                             await channel_object.set_permissions(member, overwrite=overwrite)
-                            await channel_object.send(f"<@{userid}> was set as the owner of this channel. Believe this was a mistake? Contact an Admin.")
+                            embed = discord.Embed(description = f"<@{userid}> was set as the owner of this channel. Believe this was a mistake? Contact an Admin.",color = discord.Color.random())
+                            await channel_object.send(embed = embed)
                             ownerbuild += f"<#{channel}>\n"
                         else:
                             overwrite = channel_object.overwrites_for(member)
                             overwrite.read_messages = True
                             await channel_object.set_permissions(member, overwrite=overwrite)
-                            await channel_object.send(f"<@{userid}> was added to this channel. Believe this was a mistake? Use `rc <user>` to remove them!")
+                            embed = discord.Embed(description = f"<@{userid}> was added to this channel. Believe this was a mistake? Use `[prefix]rc <user>` to remove them!",color = discord.Color.random())
+                            await channel_object.send(embed = embed)
                             build += f"<#{channel}>\n"
+                else:
+                    error += f"{channel}\n"
         
-        embed = discord.Embed(title = f"Private Channels that were Fixed for {member.name}",description = ownerbuild + build,color = discord.Color.green())
+        embed = discord.Embed(title = f"Private Channels that were Fixed for {member.name}",description = ownerbuild + build + error,color = discord.Color.random())
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
         await ctx.send(embed = embed)
 
 
-    @commands.command(aliases= ['sc'],description = "Set the channel owner.",help = "setchannel <member> [limit]")
+    @commands.command(aliases= ['sc'],description = "Set the channel owner.",help = "setchannel <member> [channel] [limit]")
     @pchannel_category_check()
     @commands.has_permissions(administrator= True)
-    async def setchannel(self,ctx,owner,channel : discord.TextChannel=None,limit = 5):
-        if str(owner).isnumeric():
-            guild = ctx.guild
-            owner = guild.get_member(int(owner))
-        else:
-            owner = await commands.converter.MemberConverter().convert(ctx,owner)
-        if not owner:
-            return await ctx.reply("Hey, that does not look like a valid person. Who are you trying to set the owner to?")
+    async def setchannel(self,ctx,owner:discord.Member,channel:discord.TextChannel=None,limit = 5):
         channel = channel or ctx.channel
         output = await self.make_channel(ctx,channel.id,int(limit),owner.id)
         if output:
@@ -251,25 +232,29 @@ class PrivateChannels(commands.Cog):
             overwrite.read_messages = True
             overwrite.manage_messages = True
             await channel.set_permissions(owner, overwrite=overwrite)
-            await ctx.reply(f"<a:PB_greentick:865758752379240448> Successfully set {channel.mention} as a private channel with {owner.mention} as the owner. The channel has a limit of {limit} people")
+            embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Successfully set {channel.mention} as a private channel with {owner.mention} as the owner. The channel has a limit of {limit} people",color = discord.Color.green())
+            await ctx.reply(embed = embed)
         else:
-            await ctx.reply(f"{channel.mention} was already a private channel.")
+            embed = discord.Embed(description = f"{channel.mention} is already a private channel!",color = discord.Color.red())
+            await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['ci'],description = "Show the information for the current channel.",help = "channelinfo")
+    @commands.command(aliases = ['ci'],description = "Show the information for the current channel.",help = "channelinfo [channel]")
     @pchannel_category_check()
     async def channelinfo(self,ctx,channel:discord.TextChannel=None):
         channel = channel or ctx.channel
-        embed=discord.Embed(title="Channel Info",description=f"Channel info for {channel.mention}", color=discord.Color.green())
+        embed=discord.Embed(title="Channel Info",description=f"Channel info for {channel.mention}", color=discord.Color.random())
 
         try:
             limit = await self.get_channel_limit(ctx,channel.id)
             members = await self.get_channel_members(ctx,channel.id)
             owner = await self.get_channel_owner(ctx,channel.id)
         except:
-            return await ctx.reply("It does not seem like this channel has been set up!")
+            embed = discord.Embed(description = "It does not seem like this channel has been set up!",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
 
         if not(limit and members and owner):
-            return await ctx.reply("It does not seem like this channel has been set up!")
+            embed = discord.Embed(description = "It does not seem like this channel has been set up!",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
 
         buildmembers = '<@'+str(members[0])+'>'
         if len(members) >= 2:
@@ -285,7 +270,7 @@ class PrivateChannels(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @commands.command(aliases=['cl'],description = "Change the member limit of the current channel.",help = "changelimit <amount>")
+    @commands.command(aliases=['cl'],description = "Change the member limit of the current channel.",help = "changelimit <limit> [channel]")
     @pchannel_category_check()
     @commands.has_permissions(administrator= True)
     async def changelimit(self,ctx,limit,channel:discord.TextChannel=None):
@@ -293,21 +278,16 @@ class PrivateChannels(commands.Cog):
         output = await self.change_limit(ctx,channel.id,limit)
 
         if output:
-            await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully changed limit of {channel.mention} to {limit}.')
+            embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully changed limit of {channel.mention} to {limit}.',color = discord.Color.green())
+            await ctx.reply(embed = embed)
         else:
-            await ctx.reply(f'This channel is not a private channel!')
+            embed = discord.Embed(description = "It does not seem like this channel has been set up!",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
 
     @commands.command(aliases = ["co"],description = "Change the current channel owner.",help = "changeowner <owner>")
     @pchannel_category_check()
     @commands.has_permissions(administrator= True)
-    async def changeowner(self,ctx,owner):
-        if str(owner).isnumeric():
-            guild = ctx.guild
-            owner = guild.get_member(int(owner))
-        else:
-            owner = await commands.converter.MemberConverter().convert(ctx,owner)
-        if not owner:
-            return await ctx.reply("Hey, that does not look like a valid person. Who are you trying to set the owner to?")
+    async def changeowner(self,ctx,owner:discord.Member):
         channel = ctx.channel
         output = await self.change_owner(ctx,channel.id,owner.id)
         if output:
@@ -319,9 +299,11 @@ class PrivateChannels(commands.Cog):
             overwrite.read_messages = True
             overwrite.manage_messages = True
             await channel.set_permissions(owner, overwrite=overwrite)
-            await ctx.reply(f"<a:PB_greentick:865758752379240448> Successfully set {channel.mention} as a private channel with {owner.mention} as the owner. The previous owner has been removed.")
+            embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Successfully set {channel.mention} as a private channel with {owner.mention} as the owner. The previous owner has been removed.",color = discord.Color.green())
+            await ctx.reply(embed = embed)
         else:
-            await ctx.reply(f"You sure that's a private channel?")
+            embed = discord.Embed(description = "It does not seem like this channel has been set up!",color = discord.Color.red())
+            return await ctx.reply(embed = embed)
             
 
 def setup(client):

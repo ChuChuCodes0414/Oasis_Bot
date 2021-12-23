@@ -169,12 +169,11 @@ class Channels(commands.Cog):
         await ctx.channel.edit(slowmode_delay=time)
         await ctx.reply(f"Set the slowmode delay in this channel to `{time}` seconds!")
 
-
-    @commands.command(description = "Purge messages in the channel.",help = "clear <amount>")
+    @commands.command(description = "Purge messages in the channel.",help = "purge <amount>")
     @commands.has_permissions(manage_messages= True)
-    async def clear(self,ctx, amount=5):
+    async def purge(self,ctx, amount:int):
         await ctx.channel.purge(limit= amount+1)
-        await ctx.send(f'Cleared {amount} messages!', delete_after = 3)
+        await ctx.send(f'Purged {amount} messages!', delete_after = 3)
 
     
 def setup(client):

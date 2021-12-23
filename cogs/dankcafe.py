@@ -241,28 +241,18 @@ class DankCafe(commands.Cog):
         if pages*30 != len(users):
             pages += 1
         place = 1
-        for user in users:
+        for user in users[:30]:
             amount = log[user]
             build += f"{place}. <@{user}>: `{amount}` wins\n"
             count += 1
             place += 1
 
-            if count >= 31:
-                embed = discord.Embed(title = f"Leaderboard for Rumble Royale",description = build,color = discord.Color.gold())
-                embed.timestamp = datetime.datetime.utcnow()
-                embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page {page} of {pages}',icon_url = ctx.message.channel.guild.icon_url)
-                await ctx.send(embed = embed)
-                await asyncio.sleep(1)
-                page += 1
-                count = 1
-                build = ""
-
-        if build != "":
-            embed = discord.Embed(title = f"Leaderboard for Rumble Royale",description = build,color = discord.Color.gold())
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page {page} of {pages}',icon_url = ctx.message.channel.guild.icon_url)
-            await ctx.send(embed = embed)
-
+            
+        embed = discord.Embed(title = f"Leaderboard for Rumble Royale",description = build,color = discord.Color.gold())
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon_url)
+        await ctx.send(embed = embed)
+        await asyncio.sleep(5)
 
         log = ref.child("dankcafe").child("tea").get()
 
@@ -278,68 +268,24 @@ class DankCafe(commands.Cog):
         if pages*30 != len(users):
             pages += 1
         place = 1
-        for user in users:
+        for user in users[:30]:
             amount = log[user]
             build += f"{place}. <@{user}>: `{amount}` wins\n"
             count += 1
             place += 1
-            if count >= 31:
-                embed = discord.Embed(title = f"Leaderboard for Mudae Tea",description = build,color = discord.Color.gold())
-                embed.timestamp = datetime.datetime.utcnow()
-                embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page {page} of {pages}',icon_url = ctx.message.channel.guild.icon_url)
-                await ctx.send(embed = embed)
-                await asyncio.sleep(1)
-                page += 1
-                count = 1
-                build = ""
 
-        if build != "":
-            embed = discord.Embed(title = f"Leaderboard for Mudae Tea",description = build,color = discord.Color.gold())
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page {page} of {pages}',icon_url = ctx.message.channel.guild.icon_url)
-            await ctx.send(embed = embed)
+        embed = discord.Embed(title = f"Leaderboard for Mudae Tea",description = build,color = discord.Color.gold())
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon_url)
+        await ctx.send(embed = embed)
+        await asyncio.sleep(1)
+        page += 1
+        count = 1
+        build = ""
+
 
         await ctx.message.delete()
 
-    @commands.command(help = "hrole <members>",description = "Add event access to multiple people.")
-    @eman_role_check()
-    async def hrole(self,ctx,*,ids):
-        members = ids.split()
-        message = await ctx.send(f"ETA: {len(members)}s")
-        errors = ""
-        for member in members:
-            if not member.isnumeric():
-                try:
-                    member = member.replace("<",'') 
-                    member = member.replace(">",'') 
-                    member = member.replace("@",'') 
-                    member = member.replace("!",'')
-                    member = member.replace("&",'')
-                    member = member.replace("#",'')
-                    member = int(member)
-                except:
-                    errors += f"Could not process {member}\n"
-            else:
-                member = int(member)
-            try:
-                member = ctx.guild.get_member(member)
-            except:
-                errors += f"Could not fetch member with id {member}\n"
-
-            role_ob = ctx.message.guild.get_role(904893939964870676)
-            try:
-                if role_ob in member.roles:
-                    await member.remove_roles(role_ob)
-                else:
-                    await member.add_roles(role_ob)
-            except:
-                errors += f"Could not role member with id {member}\n"
-            await asyncio.sleep(1)
-        await message.delete()
-        await ctx.message.add_reaction("✅")
-
-        if errors != "":
-            await ctx.send(errors)
 
 def setup(client):
     client.add_cog(DankCafe(client))

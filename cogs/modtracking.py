@@ -43,7 +43,6 @@ class ModTracking(commands.Cog):
     async def on_ready(self):
         print('Mod Traking Cog Loaded.')
 
-    
     async def post_log(self,ctx,channel,action):
         emb = discord.Embed(title=f"Mod Action Recorded for {ctx.message.author.name}",description = f"{ctx.message.author.mention}",
                                 color=discord.Color.green())
@@ -58,13 +57,13 @@ class ModTracking(commands.Cog):
     async def remove_data(self,ctx,member):
         ref = db.reference("/",app = firebase_admin._apps['modtracking'])
         ref.child(str(ctx.guild.id)).child(str(member)).delete()
-        await ctx.reply(f'<a:PB_greentick:865758752379240448> Removed mod tracking data for <@{member}>')
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Removed mod tracking data for <@{member}>',color = discord.Color.green())
+        await ctx.reply(embed = embed)
         return True
 
     async def pull_data(self,guild,member):
         ref = db.reference("/",app = firebase_admin._apps['modtracking'])
         modtracking = ref.child(str(guild)).child(str(member)).get()
-
         return modtracking
 
     async def set_data(self,ctx,guild,member,action):
@@ -113,7 +112,8 @@ class ModTracking(commands.Cog):
             return await ctx.send("Does not look like that is a valid index.")
 
         ref.child(str(guild)).child(str(member)).set(modtracking)
-        await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully Edited **{index}** to **{action}**!')
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully Edited **{index}** to **{action}**!',color = discord.Color.green())
+        await ctx.reply(embed = embed)
 
     async def remove_log(self,ctx,guild,member,index):
         ref = db.reference("/",app = firebase_admin._apps['modtracking'])
@@ -126,32 +126,39 @@ class ModTracking(commands.Cog):
             return await ctx.send("Does not look like that is a valid index.")
 
         ref.child(str(guild)).child(str(member)).set(modtracking)
-        return await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully Removed action **{index}**!')
-
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully Removed action **{index}**!',color = discord.Color.green())
+        return await ctx.reply(embed = embed)
 
     @commands.command(description = "Log an action that you have completed.",help = 'logaction <action>')
     @modtrack_role_check()
     async def logaction(self,ctx,*,action):
         await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,action)
+        embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Successfully logged **{action}**!",color = discord.Color.green())
+        await ctx.reply(embed = embed)
 
-        await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully logged **{action}**!')
-
-    @commands.group(description = "Some shortcuts for `o!logaction`",help = "log <option>")
+    @commands.group(description = "Some shortcuts for `[prefix]logaction`.",help = "log <option>")
     async def log(self,ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.reply('Hey, I need something to log here.')
+            embed = discord.Embed(description = "You need to specify a shortcut!\nUse `[prefix]help log` to see what you can log.",color = discord.Color.red())
+            await ctx.reply(embed = embed)
     
-    @log.command(description = "Log alt blacklist",help = "log alt <alt ids>")
+    @log.command(description = "Log alt blacklist.",help = "log alt <id>")
     async def alt(self,ctx,*,ids):
-        await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,f"Sucessfully Blacklisted Alt(s): {ids}")
+        await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,f"Blacklisted Alt: {ids}")
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully logged alt blacklist of  **{ids}**!',color = discord.Color.green())
+        await ctx.reply(embed = embed)
 
-        await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully logged alt blacklist of  **{ids}**!')
+    @log.command(description = "Log freeloader ban.",help = "log free <id>")
+    async def free(self,ctx,*,ids):
+        await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,f"Banned for Freeloading: {ids}")
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully logged freeloder ban of  **{ids}**!',color = discord.Color.green())
+        await ctx.reply(embed = embed)
 
-    @log.command(description = "Log new acount",help = "log new <new ids>")
-    async def new(self,ctx,*,ids):
-        await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,f"Sucessfully Identified and Blacklisted New Account(s): {ids}")
-
-        await ctx.reply(f'<a:PB_greentick:865758752379240448> Successfully logged new account(s) of  **{ids}**!')
+    @log.command(description = "Log donation role/managerment.",help = "log dono <id>")
+    async def dono(self,ctx,*,ids):
+        await self.set_data(ctx,ctx.guild.id,ctx.message.author.id,f"Did donations for: {ids}")
+        embed = discord.Embed(description = f'<a:PB_greentick:865758752379240448> Successfully logged donations for  **{ids}**!',color = discord.Color.green())
+        await ctx.reply(embed = embed)
 
     @commands.command(description = "Edit an action that you had, with the index of the action.",help = 'editaction <index> <action>')
     @modtrack_role_check()
@@ -163,34 +170,32 @@ class ModTracking(commands.Cog):
     async def removeaction(self,ctx,index):
         await self.remove_log(ctx,str(ctx.guild.id),str(ctx.message.author.id),index)
 
-    @commands.command(description =  "Remove all log data for a member",help = "removedata <member>")
+    @commands.command(description =  "Remove all mod tracking data for a member",help = "removeactiondata <member>")
     @commands.has_permissions(administrator= True)
-    async def removedata(self,ctx,member:discord.Member):
+    async def removeactiondata(self,ctx,member:discord.Member):
         await self.remove_data(ctx,member.id)
 
-    @commands.command(description = "Shows the amount of logs you have.",help = 'actionamount')
+    @commands.command(description = "Shows the amount of logs you or another person has.",help = 'actionamount [member]')
     @modtrack_role_check()
-    async def actionamount(self,ctx):
-        logs = await self.pull_data(ctx.guild.id,ctx.message.author.id)
-
-        embed=discord.Embed(title=f"Mod Tracking for {ctx.message.author}",description=f"`{len(logs)}` actions", color=discord.Color.green())
-
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+    async def actionamount(self,ctx,member:discord.Member = None):
+        member = member or ctx.author
+        logs = await self.pull_data(ctx.guild.id,member.id)
+        embed=discord.Embed(description=f"{member.mention}: `{len(logs)}` actions", color=discord.Color.random())
         await ctx.reply(embed=embed)
 
-    @commands.command(description = "See the details of your logging.",help = 'actiondetail <index>')
+    @commands.command(description = "See the details of your or another person's logging.",help = 'actiondetail [member]')
     @modtrack_role_check()
-    async def actiondetail(self,ctx):
+    async def actiondetail(self,ctx,member:discord.Member = None):
+        member = member or ctx.author
         index = 1
-        logs = (await self.pull_data(ctx.guild.id,ctx.message.author.id))
+        logs = (await self.pull_data(ctx.guild.id,member.id))
 
         if logs == None:
             logs = []
 
         logs.reverse()
 
-        embed=discord.Embed(title=f"Mod Tracking for {ctx.message.author}",description=f"`{len(logs)}` actions", color=discord.Color.green())
+        embed=discord.Embed(title=f"Mod Tracking for {member}",description=f"`{len(logs)}` actions", color=discord.Color.random())
 
         index = int(index)
         logamount = len(logs)
@@ -256,8 +261,8 @@ class ModTracking(commands.Cog):
                     break
 
             if not interaction.user.id == ctx.message.author.id:
-                embed=discord.Embed(description=f"Only {ctx.message.author.mention} can use these buttons!", color=discord.Color.red())
-                await interaction.respond(embed = embed)
+                embed1=discord.Embed(description=f"Only {ctx.message.author.mention} can use these buttons!", color=discord.Color.red())
+                await interaction.respond(embed = embed1)
                 continue
 
             if interaction.component.label == "Forward":
@@ -270,7 +275,7 @@ class ModTracking(commands.Cog):
                 else:
                     index -= 1
 
-            embed=discord.Embed(title=f"Mod Tracking for {ctx.message.author}",description=f"`{len(logs)}` actions", color=discord.Color.green())
+            embed=discord.Embed(title=f"Mod Tracking for {member}",description=f"`{len(logs)}` actions", color=discord.Color.random())
 
             index = int(index)
             logamount = len(logs)
@@ -324,192 +329,13 @@ class ModTracking(commands.Cog):
                     ]])
             if not interaction.responded:
                 await interaction.respond(type= 6)
-            
 
-    @commands.command(alises = ['va'],description = "View the actions of a certain person.",help = 'viewactions')
+    @commands.command(aliases = ['modlb'],description = "View the mod tracking leaderboard of the server.",help = 'actionleaderboard')
     @modtrack_role_check()
-    async def viewactions(self,ctx,member,index=1):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        if not member:
-            return await ctx.reply("That doesn't look like a real person. Why are you trying to check the mod actions of someone not in the server??")
-
-        logs = await self.pull_data(ctx.guild.id,member.id)
-
-        index = 1
-
-        if not logs:
-            logs = []
-
-        logs.reverse()
-
-        embed=discord.Embed(title=f"Mod Tracking for {member}",description=f"`{len(logs)}` actions", color=discord.Color.green())
-
-        index = int(index)
-        logamount = len(logs)
-        if index > 1:
-            if (index - 1) * 9 < logamount:
-                if int(index) * 9 > logamount:
-                    end = logamount 
-                else:
-                    end = (index)*9
-                
-                start = (index-1) * 9
-        else:
-            start = 0
-            if logamount > 9:
-                end = 9
-            else:
-                end = logamount 
-
-        for log in range(start,end):
-            embed.add_field(name=f'Action {len(logs)-log}',value = f'{logs[log][1]}\n{logs[log][0]}',inline = True)
-
-        embed.set_footer(text=f"Showing page {index} out of {math.ceil(logamount/9)}")
-
-
-        if index >= math.ceil(logamount/9):
-            message = await ctx.reply(
-                embed = embed, components = [
-                    [
-                        Button(label = "Back",disabled = True,style = 1),
-                        Button(label = "Forward",disabled = True,style = 1)
-                    ]
-                ]
-                )
-        else:
-            message = await ctx.reply(embed = embed, components = [
-                    [
-                        Button(label = "Back",disabled = True,style = 1),
-                        Button(label = "Forward",style = 1)
-                    ]
-                ]
-                )
-
-
-        def check(i):
-            if i.message.id == message.id:
-                if (i.component.label.startswith("Forward") or i.component.label.startswith("Back")):
-                    return True
-                else:
-                    return False
-            else:
-                return False
-            
-        while True:
-            try:
-                interaction = await self.client.wait_for("button_click", timeout = 120.0,check = check)
-            except asyncio.TimeoutError:
-                try:
-                    await message.edit("Message no longer Active",embed = embed,components = [
-                        [
-                            Button(label = "Back",disabled = True,style = 1),
-                            Button(label = "Forward",disabled = True,style = 1)
-                        ]
-                    ])
-                    break
-                except:
-                    break
-
-            if not interaction.user.id == ctx.message.author.id:
-                embed=discord.Embed(description=f"Only {ctx.message.author.mention} can use these buttons!", color=discord.Color.red())
-                await interaction.respond(embed = embed)
-                continue
-
-            if interaction.component.label == "Forward":
-                index += 1
-            else:
-                if index == 1:
-                    embed=discord.Embed(description=f"Hey, there aren't negative page numbers", color=discord.Color.red())
-                    await interaction.respond(embed = embed)
-                    continue
-                else:
-                    index -= 1
-
-            embed=discord.Embed(title=f"Mod Tracking for {member}",description=f"`{len(logs)}` actions", color=discord.Color.green())
-
-            index = int(index)
-            logamount = len(logs)
-            if index > 1:
-                if (index - 1) * 9 < logamount:
-                    if int(index) * 9 > logamount:
-                        end = logamount 
-                    else:
-                        end = (index)*9
-                    
-                    start = (index-1) * 9
-                else:
-                    await interaction.respond(content=f"There are not {index} pages.")
-                    index -= 1
-                    continue
-            else:
-                start = 0
-                if logamount > 9:
-                    end = 9
-                else:
-                    end = logamount 
-            for log in range(start,end):
-                embed.add_field(name=f'Action {len(logs)-log}',value = f'{logs[log][1]}\n{logs[log][0]}',inline = True)
-
-            embed.set_footer(text=f"Showing page {index} out of {math.ceil(logamount/9)}")
-
-            if index == 1 and index == math.ceil(logamount/9):
-                await interaction.message.edit(embed = embed,components = [
-                    [
-                        Button(label = "Back",disabled = True,style = 1),
-                        Button(label = "Forward",disabled = True,style = 1)
-                    ]])
-            elif index == 1:
-                await interaction.message.edit(embed = embed,components = [
-                    [
-                        Button(label = "Back",disabled = True,style = 1),
-                        Button(label = "Forward",style = 1)
-                    ]])
-            elif index >= math.ceil(logamount/9):
-                await interaction.message.edit(embed = embed,components = [
-                    [
-                        Button(label = "Back",style = 1),
-                        Button(label = "Forward",disabled = True,style = 1)
-                    ]])
-            else:
-                await interaction.message.edit(embed = embed,components = [
-                    [
-                        Button(label = "Back",style = 1),
-                        Button(label = "Forward",style = 1)
-                    ]])
-            if not interaction.responded:
-                await interaction.respond(type= 6)
-    
-
-    @commands.command(aliases = ['vaa'],description = "View the amount of actions of a certain person.",help = 'viewactionamount')
-    @modtrack_role_check()
-    async def viewactionamount(self,ctx,member):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        logs = await self.pull_data(ctx.guild.id,member.id)
-
-        if logs == None:
-            logs = []
-
-        embed=discord.Embed(title=f"Mod Tracking for {member}",description=f"`{len(logs)}` actions", color=discord.Color.green())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
-        await ctx.reply(embed=embed)
-
-    @commands.command(aliases = ['seethelinguisticaldefinitivenumericalqualitativedatainformationalsystemleaderboardofactions','modlb'],description = "View the mod leaderboard of the server.",help = 'viewactionleaderboard')
-    @modtrack_role_check()
-    async def viewactionleaderboard(self,ctx):
+    async def actionleaderboard(self,ctx):
         users,log = await self.pull_leaderboard(ctx.guild.id)
 
-        embed=discord.Embed(title="Mod Leaderboard", color=discord.Color.green())
+        embed=discord.Embed(title="Mod Leaderboard", color=discord.Color.random())
         
         count = 1
         amount = len(users) 
@@ -582,7 +408,7 @@ class ModTracking(commands.Cog):
                         continue
                     else:
                         index -= 1
-                embed=discord.Embed(title="Mod Leaderboard", color=discord.Color.green())
+                embed=discord.Embed(title="Mod Leaderboard", color=discord.Color.random())
                 start = (index-1) * 10
                 
                 if amount >= start + 10:
@@ -623,9 +449,5 @@ class ModTracking(commands.Cog):
                 if not interaction.responded:
                     await interaction.respond(type= 6)
                 
-                    
-
-
-
 def setup(client):
     client.add_cog(ModTracking(client))

@@ -26,7 +26,7 @@ class Help(commands.Cog):
             "sniper":"Powerful snipe commands to see what is being deleted/edited.",
             "status":"Bot information commands.",
             "utility":"Server utility commands, like whois.",
-            "halloween":"🎃 Halloween drops for halloween!",
+            "winter":"❄ Winter drops of gingerbread!",
             "war":"Multiplayer fight, battle to the last one standing!"
         }
     
@@ -43,6 +43,7 @@ class Help(commands.Cog):
             return False
         except:
             return False
+            
     async def send_embed(self,ctx, embed, client,dm = False):
         def check(i):
             if str(i.component.emoji) == "❌" and i.message.id == message.id:

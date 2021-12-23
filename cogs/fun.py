@@ -26,7 +26,8 @@ class Fun(commands.Cog):
                         "early":"<:PB_BadgeEarly:866847704680103956> **Early Supporter**\nThis person was one of the first few people to invite the bot to their server!",
                         "iq":"<:IQBadge:870129049232637992> **IQ**\nThis person somehow got the maximum IQ score possible. That's a 1/2000 chance!",
                         "8ball":"<:8ballBadge:870129771122671627> **8ball**\nAnd the bot says...`yes`.",
-                        "nab":"<:NabBadge:870130999500095549> **Nab**\nThis person got the maximum nabrate...but it's only a 1/100 chance. Must mean this person is a nab."
+                        "nab":"<:NabBadge:870130999500095549> **Nab**\nThis person got the maximum nabrate...but it's only a 1/100 chance. Must mean this person is a nab.",
+                        "color":"<:ColorBadge:912893729482883142> **Color Game**\nThis person got to level 20 in the color game...pretty good memory"
                     }
         self.roasts = ["Light travels faster than sound, that's why you seemed bright until you spoke",
                         "I would explain whats going wrong with you, but I forgot my english-to-dumbass dictionary at home",
@@ -391,7 +392,10 @@ class Fun(commands.Cog):
                     embed = discord.Embed(description = f"You lost! The color was **{color}**. You made it to level **{level}**")
                     await interaction.respond(embed = embed,ephemeral = False)
                     embed = discord.Embed(description = f"{ctx.author.mention} **Color Game**\nLevel {level}\nYou Lose!",color = discord.Color.red())
-                    return await message.edit(embed = embed, components = buttonsa)
+                    await message.edit(embed = embed, components = buttonsa)
+                    if level >= 20:
+                        await self.grant_badge(ctx,ctx.author.id,"color")
+                    return
 
             level += 1
             embed = discord.Embed(description = f"{ctx.author.mention} **Color Game**\nLevel {level}\nWatch what colors are displayed!",color = discord.Color.random())

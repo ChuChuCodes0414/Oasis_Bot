@@ -80,7 +80,10 @@ class LoggingError(commands.Cog):
             embed = discord.Embed(title = f'⚠ Invalid Input',description = f'**Command Usage:** {ctx.command.help}\n**Command Information:** {ctx.command.description}',color = discord.Color.red())
             embed.timestamp = datetime.datetime.utcnow()
             embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
-            await ctx.reply(embed = embed)
+            try:
+                await ctx.reply(embed = embed)
+            except:
+                await ctx.send(embed = embed)
             return
 
         if isinstance(error, commands.NoPrivateMessage):
@@ -123,7 +126,7 @@ class LoggingError(commands.Cog):
         embed = discord.Embed(title = f'⚠ There was an error that was not traced!',description = f'On Command: {ctx.command.name}',color = discord.Color.red())
         embed.add_field(name = "Command Invoke Details",value = f'**Guild Info:** {ctx.guild.name} ({ctx.guild.id})\n**User Information:** {ctx.author.name} | {ctx.author.mention} ({ctx.author.id})\n**Jump URL:** {ctx.message.jump_url}\n**Command Used:** {ctx.message.content}\n**Error ID:** {errorid}',inline = False)
         errordetails = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
-        if len(errordetails) < 4000:
+        if len(errordetails) < 1000:
             embed.add_field(name = "Command Error Log",value = f'```{errordetails}```')
             embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
             embed.timestamp = datetime.datetime.utcnow()
@@ -133,9 +136,8 @@ class LoggingError(commands.Cog):
             f.write(errordetails)
             embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
             embed.timestamp = datetime.datetime.utcnow()
-
-            await channel.send(embed = embed,file = discord.File("errorlogging\\" + str(errorid) + ".txt"))
             f.close()
+            await channel.send(embed = embed,file = discord.File("errorlogging\\" + str(errorid) + ".txt"))
             os.remove(f"errorlogging\{errorid}.txt")
         
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)

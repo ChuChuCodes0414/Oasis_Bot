@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import db
 from datetime import datetime
 import asyncio
+import os
 
 class Sniper(commands.Cog):
     '''
@@ -17,6 +18,7 @@ class Sniper(commands.Cog):
         self.edited_messages = {}
         self.removed_reactions = {}
         self.purged_messages = {}
+        self.image_snipes = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -35,6 +37,22 @@ class Sniper(commands.Cog):
             max = 50
         if len(self.sniped_messages[message.channel.id]) > max:
             self.sniped_messages[message.channel.id].pop(-1)
+        '''
+        if message.attachments:
+            path = f"imagesnipes\\{message.channel.id}"
+            if not os.path.isdir(path):
+                os.mkdir(f"imagesnipes\\{message.channel.id}")
+            files = len(os.listdir(path))
+            attachments = message.attachments[0]
+            await attachments.save(f"imagesnipes\\{message.channel.id}\\{files+1}_{attachments.filename}")
+            self.image_snipes[f"{files+1}_{attachments.filename}"] = [message.author,now]
+            attachment = True
+        if attachment:
+            os.remove(f"imagesnipes\\{message.channel.id}\\{files+1}_{attachments.filename}")
+            if len(os.listdir(path)) == 0:
+                os.rmdir(path)
+        attachment = False
+        '''
         time = ref.child(str(message.guild.id)).child("snipecd").get() or 30
         await asyncio.sleep(time)
         try:
@@ -140,7 +158,7 @@ class Sniper(commands.Cog):
             sniped_embed = message.embeds[0]
             await ctx.reply(embed = sniped_embed)
             emb = discord.Embed(name = f"Last deleted message in #{channel.name}", description = "Embed sniped, shown above.")
-            emb.set_author(name="Sent by " + message.author + "#" + message.author.discriminator,icon_url=message.author.avatar_url)
+            emb.set_author(name="Sent by " + message.author.name + "#" + message.author.discriminator,icon_url=message.author.avatar_url)
             emb.set_footer(text = f"Sniped by {ctx.message.author}")
             return await ctx.send(embed = emb)
         else:
@@ -260,6 +278,40 @@ class Sniper(commands.Cog):
         except:
             messages = 0
         await ctx.reply(f"There are a total of `{messages}` purges in this channel!")
+    
+    @commands.command(disabled = True,aliases = ['isn'],description = "Snipe images that were deleted.",help = "isnipe [index] [channel]")
+    @snipe_role_check()
+    async def isnipe(self,ctx,index:int = 1, channel:discord.TextChannel = None):
+        channel = channel or ctx.channel
+        index -= 1
+
+        path = f"imagesnipes\\{channel.id}"
+
+        if not os.path.isdir(path):
+            return await ctx.reply(f"I did not find any deleted images here in {channel.mention}")
+        else:
+            files = os.listdir(path)
+            files.reverse()
+            if len(files) <= index:
+                return await ctx.reply(f"There are not that many deleted files here!")
+            file = files[index]
+            info = self.image_snipes[file] 
+            file = discord.File(path + "\\" + file)
+            embed = discord.Embed(title = "Image Sniped Above",description = f"Sent by: {info[0]}")
+            embed.set_footer(text = f"Sniped by {ctx.message.author}")
+            embed.timestamp = info[1]
+            await ctx.send(embed = embed,file = file)
+
+    @commands.command(disabled = True,aliases = ['mis'],description = "How many hiding images are in this channel? Find out.",help = "maxisnipe")
+    @snipe_role_check()
+    async def maxisnipe(self,ctx):
+        path = f"imagesnipes\\{ctx.channel.id}"
+
+        if not os.path.isdir(path):
+            return await ctx.reply(f"I did not find any deleted images here in {ctx.channel.mention}")
+        else:
+            return await ctx.reply(f"There are `{len(os.listdir(path))}` hiding images in {ctx.channel.mention}!")
+
 
     @commands.command(aliases = ['csn'],description = "Clears all sniped messages from the bot cache for the specified or current channel.",help = "clearsnipes [channel]")
     @commands.has_permissions(administrator = True)
@@ -279,6 +331,7 @@ class Sniper(commands.Cog):
         except:
             pass
         await ctx.send(f"<a:PB_greentick:865758752379240448> Removed sniped cache for {channel.mention}")
+
 
 
 def setup(client):

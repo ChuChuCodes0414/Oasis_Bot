@@ -44,21 +44,10 @@ settings_app = firebase_admin.initialize_app(cred_obj_settings , {
     'databaseURL': sensitive.SETTINGS_LINK
     },name="settings")
 
-cred_obj_giveaways = sensitive.CRED_OBJ_GIVEAWAYS
-giveaways_app = firebase_admin.initialize_app(cred_obj_giveaways , {
-    'databaseURL':sensitive.GIVEAWAYS_LINK
-    },name="giveaways")
-
-cred_obj_giveawaylogging = sensitive.CRED_OBJ_GIVEAWAYLOGGING
-giveaways_app = firebase_admin.initialize_app(cred_obj_giveawaylogging , {
-    'databaseURL': sensitive.GIVEAWAYLOGGING_LINK
-    },name="glogging")
-
 cred_obj_freeloader = sensitive.CRED_OBJ_FREELOADER
 freeloader_app = firebase_admin.initialize_app(cred_obj_freeloader , {
     'databaseURL':sensitive.FREELOADER_LINK
     },name="freeloader")
-
 
 cred_obj_profile = sensitive.CRED_OBJ_PROFILE
 profile_app = firebase_admin.initialize_app(cred_obj_profile , {
@@ -74,6 +63,11 @@ cred_obj_lottery = sensitive.CRED_OBJ_LOTTERY
 lottery_app = firebase_admin.initialize_app(cred_obj_lottery , {
     'databaseURL':sensitive.LOTTERY_LINK
     },name="lottery")
+
+cred_obj_bans = sensitive.CRED_OBJ_BANS
+bans_app = firebase_admin.initialize_app(cred_obj_bans , {
+    'databaseURL':sensitive.BANS_LINK
+    },name="bans")
 
 def get_prefix(client,message):   
     if beta:
@@ -142,7 +136,7 @@ async def check_status():
         errors += f"⚠ Realtime Ping Alert: {latency.microseconds*0.001}ms\n"
 
     embed = discord.Embed(title = "Checking Database Status <a:OB_Loading:907101653692456991>",color = discord.Color.random())
-    databases = {"elead":"Event","modlogs":"Mod Logs","pepegabot":"Private Channels","modtracking":"Mod Tracking","settings":"Settings","giveaways":"Giveaway Donation","glogging":"Giveaway Logging","freeloader":"Freeloader","profile":"Profile","invites":"Invites","lottery":"Lottery"}
+    databases = {"elead":"Event","modlogs":"Mod Logs","pepegabot":"Private Channels","modtracking":"Mod Tracking","settings":"Settings","freeloader":"Freeloader","profile":"Profile","invites":"Invites","lottery":"Lottery"}
     message = await channel.send(embed = embed)
     for database,name in databases.items():
         embed.add_field(name = f"{name} Database",value = f"Upload: <a:OB_Loading:907101653692456991>\nDownload: <a:OB_Loading:907101653692456991>\nDelete: <a:OB_Loading:907101653692456991>")
@@ -190,7 +184,7 @@ async def check_status():
     if errors == "":
         await channel.send(embed = discord.Embed(description = f"No errors found! Checking again in: 30 minutes\nCompleted At: {timestamp} | {timestamp2}"))
     else:
-        await channel.send("<@&847289699487580161>",embed = discord.Embed(description = errors + f"\nCompleted At: {timestamp} | {timestamp2}"))
+        await channel.send("<@&847289699487580161>",embed = discord.Embed(title = "Bot has dectected errors!",description = errors + f"\nCompleted At: {timestamp} | {timestamp2}"))
 
 
 @client.event
@@ -271,11 +265,13 @@ def global_check(ctx):
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
-
+'''
 if beta:
     for filename in os.listdir('./betacogs'):
         if filename.endswith('.py'):
             client.load_extension(f'betacogs.{filename[:-3]}')
+'''
+
 
 client.load_extension("jishaku")
 
