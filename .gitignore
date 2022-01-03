@@ -4,3 +4,4 @@ Procfile
 Aptfile
 requirements.txt
 .vscode/
+musicbot/config.py
