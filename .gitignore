@@ -5,3 +5,5 @@ Aptfile
 requirements.txt
 .vscode/
 musicbot/config.py
+cogs/__pycache__/
+musicbot/__pycache__/
