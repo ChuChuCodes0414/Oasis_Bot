@@ -83,8 +83,8 @@ class Channels(commands.Cog):
 
         embed=discord.Embed(title = f"{ctx.author.name} is starting a heist!",description=f"**Heist Checklist**\n> Make sure to have **2000** in your wallet to join!\n> Passive must be off to join the heist (`pls settings passive false`)\n> Have a lifesaver in your inventory in case of your untimely demise" + 
         f"\n**Heist Information**\n> Heist will be started by {ctx.author.mention}\n> You must have the {role.mention} role to join\n> You will have **{length}** minutes to join!")
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
 
 
         restrictrole = ref.child(str(ctx.guild.id)).child('dheistdrole').get() 

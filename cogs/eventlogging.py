@@ -142,8 +142,8 @@ class EventLogging(commands.Cog):
 
         emb.add_field(name = "Event information:",value = f"[Link to Event]({message.jump_url})\nEvent Type: {type}\nEvent Prize: {prize}\nEvent Donor: {donor}")
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Event Logging',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Event Logging',icon_url = ctx.message.channel.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -170,8 +170,8 @@ class EventLogging(commands.Cog):
             if count >= 11:
                 break
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(description = "Shows the amount of events you or another user has done.",help = "eamount <user>")
@@ -239,7 +239,7 @@ class EventLogging(commands.Cog):
         embed=discord.Embed(title="<a:event:923046835952697395> It's Event Time <a:event:923046835952697395>" ,color=discord.Color.random())
         build = ""
         embed.set_author(name="Hosted by " + ctx.author.display_name,icon_url=ctx.author.avatar_url)
-        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=ctx.guild.icon)
         build += f"**Event Type:** {event}\n**Event Info:** {eventinfo}\n**Requirement:** {requirement}\n**Prize:** {amount}\n**Channel:** {channel.mention}\n"
         build += f"**Donor:**{donor.mention}\n**Message:** {message}"
         embed.set_footer(text=f"The event begins in {timebuild}")

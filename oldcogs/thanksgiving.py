@@ -494,7 +494,7 @@ class Thanksgiving(commands.Cog):
                 break
 
         embed = discord.Embed(title = f"Leaderboard for {ctx.guild.name} Thanksgiving Event",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
+        embed.timestamp = datetime.datetime.now()
 
         await ctx.reply(embed = embed)
 

@@ -49,15 +49,15 @@ class Status(commands.Cog):
         embed.add_field(name="Description", value=f"A helpful bot with a variety of features, from private channels to mod logging. Ping the bot to find out the prefix!", inline=False)
         embed.add_field(name="Server Count", value=f"{len(self.client.guilds)} servers", inline=False)
         embed.add_field(name="Found any Bugs?", value=f"Join the [support server](https://discord.com/invite/9pmGDc8pqQ)", inline=False)
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(description = "The most recent updates to the main bot will go here.",help = "botupdates")
     async def botupdates(self,ctx):
         embed = discord.Embed(title="Oasis Bot",description=f"Bot Updates have been moved to the [support server](https://discord.com/invite/9pmGDc8pqQ)", color=discord.Color.green())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(description = "Invite the bot or join the support server.",help = "invite")
@@ -65,8 +65,8 @@ class Status(commands.Cog):
         embed = discord.Embed(title = "Invite links",description = "Invite the bot",color = discord.Color.green())
         embed.add_field(name = 'Bot Invite',value = '[Bot Invite](https://discord.com/api/oauth2/authorize?client_id=830817370762248242&permissions=8&scope=bot)',inline = False)
         embed.add_field(name = 'Support Server',value = '[Server Invite](https://discord.com/invite/9pmGDc8pqQ)',inline = False)
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
 def setup(client):

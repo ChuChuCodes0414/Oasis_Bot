@@ -19,8 +19,8 @@ class LoggingError(commands.Cog):
 
     async def send_error_embed(self,ctx,message):
         embed = discord.Embed(description = message,color = discord.Color.red())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon)
         try:
             await ctx.reply(embed= embed)
         except:
@@ -78,8 +78,8 @@ class LoggingError(commands.Cog):
 
         if isinstance(error, commands.UserInputError):
             embed = discord.Embed(title = f'⚠ Invalid Input',description = f'**Command Usage:** {ctx.command.help}\n**Command Information:** {ctx.command.description}',color = discord.Color.red())
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             try:
                 await ctx.reply(embed = embed)
             except:
@@ -128,14 +128,14 @@ class LoggingError(commands.Cog):
         errordetails = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
         if len(errordetails) < 1000:
             embed.add_field(name = "Command Error Log",value = f'```{errordetails}```')
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
-            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon)
+            embed.timestamp = datetime.datetime.now()
             await channel.send(embed = embed)
         else:
             f =  open(f'errorlogging\{errorid}.txt', 'w')
             f.write(errordetails)
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon_url)
-            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon)
+            embed.timestamp = datetime.datetime.now()
             f.close()
             await channel.send(embed = embed,file = discord.File("errorlogging\\" + str(errorid) + ".txt"))
             os.remove(f"errorlogging\{errorid}.txt")

@@ -125,8 +125,8 @@ class DankCafe(commands.Cog):
         ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).set(int(current) - count)
 
         embed = discord.Embed(title = f"Entries Removed!",description = f"Removed `{count}` entries for {member}. They now have `{int(current) - count}` total entries in this dank hunt!", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(aliases = ["dhv"],description = "View yours or another member dank hunt current count.",help = "dankhuntview [member]")
@@ -138,8 +138,8 @@ class DankCafe(commands.Cog):
         current = ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).get() or 0
 
         embed = discord.Embed(description = f"{member} dank hunt count: `{current}`", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(aliases = ["dhlb"],description = "View the top 10 on dank hunt leaderboard.",help = "dankhuntleaderboard")
@@ -163,8 +163,8 @@ class DankCafe(commands.Cog):
                 break
 
         embed = discord.Embed(title = f"Leaderboard for {ctx.guild.name} dank hunt",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.reply(embed = embed)
 
@@ -249,8 +249,8 @@ class DankCafe(commands.Cog):
 
             
         embed = discord.Embed(title = f"Leaderboard for Rumble Royale",description = build,color = discord.Color.gold())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon)
         await ctx.send(embed = embed)
         await asyncio.sleep(5)
 
@@ -275,8 +275,8 @@ class DankCafe(commands.Cog):
             place += 1
 
         embed = discord.Embed(title = f"Leaderboard for Mudae Tea",description = build,color = discord.Color.gold())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Leaderboard Logging | Page 1 of {pages}',icon_url = ctx.message.channel.guild.icon)
         await ctx.send(embed = embed)
         await asyncio.sleep(1)
         page += 1

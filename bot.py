@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 from itertools import cycle
 import firebase_admin
 from firebase_admin import db
-from discord_components import DiscordComponents, Button
+from discord_components import DiscordComponents
 import sensitive
 import asyncio
 from discord.embeds import EmptyEmbed

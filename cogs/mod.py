@@ -71,8 +71,8 @@ class Mod(commands.Cog):
                 embed.set_thumbnail(url = member.avatar_url)
                 embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
                 embed.add_field(name = "Account Created On",value= f'{date}',inline = True)
-                embed.timestamp = datetime.utcnow()
-                embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon_url)
+                embed.timestamp = datetime.now()
+                embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon)
                 channel = self.client.get_channel(825882336594886687)
                 await channel.send(embed=embed)\
 

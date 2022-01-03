@@ -152,7 +152,7 @@ class Currency(commands.Cog):
 
         
         emb.set_footer(text = footer)
-        emb.timestamp = datetime.datetime.utcnow()
+        emb.timestamp = datetime.datetime.now()
         await ctx.reply(embed = emb)
 
     @commands.command(aliases = ['dep'],description = "Deposit some of your coins into your bank.",help = "deposit <amount>")

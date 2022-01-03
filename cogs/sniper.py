@@ -27,7 +27,7 @@ class Sniper(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self,message):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
-        now = datetime.utcnow()
+        now = datetime.now()
         if message.channel.id in self.sniped_messages:
             self.sniped_messages[message.channel.id].insert(0,[message,now])
         else:
@@ -63,7 +63,7 @@ class Sniper(commands.Cog):
     @commands.Cog.listener()
     async def on_bulk_message_delete(self,messages):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
-        now = datetime.utcnow()
+        now = datetime.now()
         if messages[0].channel.id in self.purged_messages:
             self.purged_messages[messages[0].channel.id].insert(0,[messages,now])
         else:
@@ -84,7 +84,7 @@ class Sniper(commands.Cog):
     async def on_message_edit(self,message_before,message_after):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if message_before.content and message_after.content:
-            now = datetime.utcnow()
+            now = datetime.now()
             if message_before.channel.id in self.edited_messages:
                 self.edited_messages[message_before.channel.id].insert(0,[message_before,message_after,now])
             else:
@@ -105,7 +105,7 @@ class Sniper(commands.Cog):
     async def on_reaction_remove(self,reaction, user):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         message = reaction.message
-        now = datetime.utcnow()
+        now = datetime.now()
         if message.channel.id in self.removed_reactions:
             self.removed_reactions[message.channel.id].insert(0,[message,user,reaction,now])
         else:

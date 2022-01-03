@@ -60,8 +60,8 @@ class Utility(commands.Cog):
 
         embed.add_field(name = "Top Role",value = f'{member.top_role.mention}',inline = True)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(aliases = ['si'],description = "Some basic information about the current server.",help = 'serverinfo')
@@ -69,7 +69,7 @@ class Utility(commands.Cog):
         guild = ctx.guild
 
         embed = discord.Embed(title = f'Information about {guild.name}',description = f'ID: {guild.id}',color = discord.Color.green())
-        embed.set_thumbnail(url = ctx.guild.icon_url)
+        embed.set_thumbnail(url = ctx.guild.icon)
 
         embed.add_field(name = "Sever Region",value = guild.region,inline = True)
         embed.add_field(name = "Creation Date",value = guild.created_at.strftime("%Y-%m-%d %H:%M"),inline = True)
@@ -81,8 +81,8 @@ class Utility(commands.Cog):
         embed.add_field(name = "Channel Count",value = f'Text Channels: {len(guild.text_channels)}\nVoice Channels: {len(guild.voice_channels)}')
         embed.add_field(name = "Booster Count",value = f'Boost Level: {guild.premium_tier}\nBoost Count: {guild.premium_subscription_count}')
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
     
     @commands.command(aliases = ["ri"],description = "View some information about a role.",help = "roleinfo <role>")

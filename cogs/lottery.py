@@ -115,8 +115,8 @@ class Lottery(commands.Cog):
             embed = discord.Embed(title = f"You did not include enough items for a full entry!",description = f"Each entry into the raffle requires **{priceamount}** `{wayentered}`"
             , color = discord.Color.random())
 
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{message.guild.name} Lottery System',icon_url = message.channel.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'{message.guild.name} Lottery System',icon_url = message.channel.guild.icon)
             return await message.channel.send(embed = embed)
 
         currententries = thelottery.get("currententries",0)
@@ -142,8 +142,8 @@ class Lottery(commands.Cog):
 
         embed.add_field(name = "Entry Details",value = f"Entry Method: `{wayentered}`\nAmount Sent: `{sendamount}`\nEntries Granted: `{entrycount}`")
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{message.guild.name} Lottery System',icon_url = message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{message.guild.name} Lottery System',icon_url = message.channel.guild.icon)
         await message.channel.send(embed = embed)
 
     @commands.command(description = "Start a lottery with dank memer being the entry currency. See documentation for info.",help = "lotterystart"
@@ -337,8 +337,8 @@ class Lottery(commands.Cog):
         ref.child(str(ctx.guild.id)).child(str(ctx.channel.id)).child("currententries").set(currententries + entrycount)
 
         embed = discord.Embed(title = f"Entries Added!",description = f"Added `{entrycount}` entries for {member}. They now have `{personentries + entrycount}` total entries in this lottery!", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
         await ctx.send(embed = embed)
 
     @commands.command(description = "Manually remove entries from a user.",help = "removeentries <entry amount> <member>")
@@ -369,8 +369,8 @@ class Lottery(commands.Cog):
         ref.child(str(ctx.guild.id)).child(str(ctx.channel.id)).child("currententries").set(currententries - entrycount)
 
         embed = discord.Embed(title = f"Entries Removed!",description = f"Removed `{entrycount}` entries for {member}. They now have `{personentries - entrycount}` total entries in this lottery!", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
         await ctx.send(embed = embed)
 
 
@@ -402,8 +402,8 @@ class Lottery(commands.Cog):
         prize = lotteries["prize"]
         host = lotteries["host"]
         embed = discord.Embed(title = f"🏆 The Lottery is now Over!",description = f"Tickets have been generated! With `{len(entries)}` unique entries and `{len(tickets)}` tickets generated, the winner with ticket `{winner}` is... <@{tickets[winner]}>\nThis lottery was hosted by <@{host}>", color = discord.Color.gold())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
         await message.edit(embed = embed)
 
         host = ctx.guild.get_member(int(host))
@@ -442,12 +442,12 @@ class Lottery(commands.Cog):
         maxentries = lotteries.get("maxentries","None")
         embed = discord.Embed(title = f"Lottery for {lotteries['prize']}",description = f"**Lottery Channel:** {channel.mention}\n**Total People Entered:** `{entrycount}`\n**Total Entries:** `{totalentries}`" + 
             f"\n**Lottery Host:** <@{lotteries['host']}> (`{lotteries['host']}`)\n**Maximum Raffle Entries:** `{maxentries}`\n**Raffle Prize:** {lotteries['prize']}", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
+        embed.timestamp = datetime.datetime.now()
         count = 1
         for type,details in lotteries.get("entrymethods",{}).items():
             embed.add_field(name = f"Entry Method {count}: {type}",value = f"**Amount Needed:** {details['amount']}\n**Entries Given:** {details['entries']}")
             count += 1
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
         message = await ctx.send(embed = embed)
 
     @commands.command(hidden = True)
@@ -482,8 +482,8 @@ class Lottery(commands.Cog):
             lotteryinfo += f"**{thelottery['prize']} Lottery**\n`{entries}` entries\n\n"
 
         embed = discord.Embed(title = f"Lottery Profile for {member}",description = f"{lotteryinfo}", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.send(embed = embed)
 
@@ -505,8 +505,8 @@ class Lottery(commands.Cog):
             lotteryinfo += f"**{thelottery['prize']} Lottery**\nLocation: <#{channel}>\n\n"
 
         embed = discord.Embed(title = f"Active Lottery for {ctx.guild}",description = f"{lotteryinfo}", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.send(embed = embed)
 
@@ -527,8 +527,8 @@ class Lottery(commands.Cog):
             count += 1
 
         emb = discord.Embed(title=f"Lottery Leaderboard",description = build,color = discord.Color.random())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name} Lottery System',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = emb)
 
 def setup(client):

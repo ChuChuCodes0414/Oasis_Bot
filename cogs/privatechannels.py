@@ -215,8 +215,8 @@ class PrivateChannels(commands.Cog):
                     error += f"{channel}\n"
         
         embed = discord.Embed(title = f"Private Channels that were Fixed for {member.name}",description = ownerbuild + build + error,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.send(embed = embed)
 
 
@@ -260,13 +260,13 @@ class PrivateChannels(commands.Cog):
         if len(members) >= 2:
             for member in members[1:]:
                 buildmembers+= (', <@'+str(member)+'>')
-        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=ctx.guild.icon)
         embed.add_field(name="Channel Owner:",value=f'<@{owner}>',inline=True)
         embed.add_field(name="Channel Limit:",value=f'{len(members)}/{limit}',inline=True)
         embed.add_field(name="Members:",value=buildmembers,inline=False)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.reply(embed=embed)
 

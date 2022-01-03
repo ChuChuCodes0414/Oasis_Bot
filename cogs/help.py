@@ -15,7 +15,6 @@ class Help(commands.Cog):
             "eventlogging":"Event manager logging, with leaderboard and event embeds.",
             "freeloader":"Checking for dank memer heist freeloaders.",
             "fun":"Fun commands, like fight and iq.",
-            "giveawayutil":"Tracking donations and giveaway managers.",
             "invites":"Tracking invites and logging them.",
             "lottery":"Lottery/raffle for using dank memer items.",
             "mod":"Standard and simple mod commands.",
@@ -43,47 +42,6 @@ class Help(commands.Cog):
             return False
         except:
             return False
-            
-    async def send_embed(self,ctx, embed, client,dm = False):
-        def check(i):
-            if str(i.component.emoji) == "❌" and i.message.id == message.id:
-                return True
-            else:
-                return False
-        
-        if dm:
-            try:
-                dmchannel = ctx.author.dm_channel
-                if dmchannel == None:
-                    dmchannel = await ctx.author.create_dm()
-                message = await dmchannel.send(embed = embed)
-                emoji = self.client.get_emoji(865758752379240448)
-                return await ctx.message.add_reaction(emoji)
-            except:
-                return await ctx.reply("I couldn't dm you the help message! Please make sure your dms are open.")
-
-        message = await ctx.reply(embed=embed,components = [
-                Button(emoji = "❌")
-            ])
-
-        while True:
-            try:
-                interaction = await client.wait_for("button_click",timeout=60.0, check = check)
-            except asyncio.TimeoutError:
-                try:
-                    await message.edit("Message no longer Active",embed = embed)
-                    break
-                except:
-                    break
-            if not interaction.user.id == ctx.message.author.id:
-                embed=discord.Embed(description=f"Only {ctx.message.author.mention} can use these buttons!", color=discord.Color.red())
-                await interaction.respond(embed = embed)
-                continue
-            else:
-                await interaction.message.delete()
-                await interaction.respond(type = 6)   
-                break
-
 
     async def helpemb(self, ctx, input):
         dm = False
@@ -205,8 +163,8 @@ class Help(commands.Cog):
 
         # sending reply embed using our own function defined above
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         return emb
 
     @commands.command(description = "Literally this command...why you looking at this.",help = "help [command or cog]")
@@ -221,8 +179,8 @@ class Help(commands.Cog):
             for cog in self.cogs_short:
                 selectslist.append(SelectOption(value = cog,label = cog.capitalize(),description = self.cogs_short[cog]))
             embed = discord.Embed(title = "Oasis Bot Help Command",description = "Hello! You can use the selects list below to navigate through the categories.",color = discord.Color.random())
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'Choose a category below to get started!',icon_url = ctx.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'Choose a category below to get started!',icon_url = ctx.guild.icon)
             message = await ctx.send(embed = embed,components = [Select(options =selectslist )])
 
             while True:

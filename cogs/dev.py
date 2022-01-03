@@ -20,7 +20,7 @@ class Dev(commands.Cog):
         channel = self.client.get_channel(int(849761988628316191))
 
         embed = discord.Embed(title = f'Joined {guild.name}',description = f'ID: {guild.id}',color = discord.Color.green())
-        embed.set_thumbnail(url = guild.icon_url)
+        embed.set_thumbnail(url = guild.icon)
 
         embed.add_field(name = "Server Owner",value = f'{guild.owner} (ID: {guild.owner.id})',inline = True)
 
@@ -30,8 +30,8 @@ class Dev(commands.Cog):
 
         embed.add_field(name = "Creation Date",value = guild.created_at.strftime("%Y-%m-%d %H:%M"),inline = True)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon)
         await channel.send(embed = embed)
 
     @commands.Cog.listener()
@@ -39,7 +39,7 @@ class Dev(commands.Cog):
         channel = self.client.get_channel(int(849761988628316191))
 
         embed = discord.Embed(title = f'Removed from {guild.name}',description = f'ID: {guild.id}',color = discord.Color.red())
-        embed.set_thumbnail(url = guild.icon_url)
+        embed.set_thumbnail(url = guild.icon)
 
         embed.add_field(name = "Server Owner",value = f'{guild.owner} (ID: {guild.owner.id})',inline = True)
 
@@ -49,8 +49,8 @@ class Dev(commands.Cog):
 
         embed.add_field(name = "Creation Date",value = guild.created_at.strftime("%Y-%m-%d %H:%M"),inline = True)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon)
         await channel.send(embed = embed)
 
     @commands.command(hidden=True)

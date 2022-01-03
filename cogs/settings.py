@@ -40,8 +40,8 @@ class Configure(commands.Cog):
                 emb = discord.Embed(title="Mod Track Role added",
                                     description=f"Sucessfully added <@&{role}> as a mod track role.",
                                     color=discord.Color.green())
-                emb.timestamp = datetime.datetime.utcnow()
-                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+                emb.timestamp = datetime.datetime.now()
+                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
                 await ctx.reply(embed=emb)
         else:
             mods = [role]
@@ -49,8 +49,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Mod Track Role added",
                                 description=f"Sucessfully added <@&{role}> as a mod track role.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def remove_modtrack_role(self,ctx,role):
@@ -65,8 +65,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Mod Track Role added",
                                 description=f"Sucessfully removed <@&{role}> from mod track roles.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def add_mod_role(self,ctx,role):
@@ -84,8 +84,8 @@ class Configure(commands.Cog):
                 emb = discord.Embed(title="Mod Role added",
                                     description=f"Sucessfully added <@&{role}> as a mod role.",
                                     color=discord.Color.green())
-                emb.timestamp = datetime.datetime.utcnow()
-                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+                emb.timestamp = datetime.datetime.now()
+                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
                 await ctx.reply(embed=emb)
         else:
             mods = [role]
@@ -94,8 +94,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Mod Role added",
                                 description=f"Sucessfully added <@&{role}> as a mod role.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def remove_mod_role(self,ctx,role):
@@ -110,8 +110,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Mod Role remove",
                                 description=f"Sucessfully removed <@&{role}> from mod roles.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def add_snipe_role(self,ctx,role):
@@ -129,8 +129,8 @@ class Configure(commands.Cog):
                 emb = discord.Embed(title="Sniper Role added",
                                     description=f"Sucessfully added <@&{role}> as a sniper role.",
                                     color=discord.Color.green())
-                emb.timestamp = datetime.datetime.utcnow()
-                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+                emb.timestamp = datetime.datetime.now()
+                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
                 await ctx.reply(embed=emb)
         else:
             snipers = [role]
@@ -138,8 +138,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Sniper Role added",
                                     description=f"Sucessfully added <@&{role}> as a sniper role.",
                                     color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def remove_snipe_role(self,ctx,role):
@@ -154,8 +154,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Sniper Role remove",
                                 description=f"Sucessfully removed <@&{role}> from sniper roles.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def set_snipe_cd(self,ctx,cd):
@@ -165,8 +165,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Sniper Cooldown Set",
                                 description=f"Sucessfully set snipe cooldown to `{cd}` seconds.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_snipe_cd(self,ctx):
@@ -176,8 +176,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Sniper Cooldown Removed",
                                 description=f"Sucessfully removed snipe cooldown.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_snipe_lookback(self,ctx,lookback):
@@ -189,8 +189,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Sniper Lookback Set",
                                 description=f"Sucessfully set snipe lookback to `{lookback}` messages.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_snipe_lookback(self,ctx):
@@ -200,8 +200,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Sniper Lookback Removed",
                                 description=f"Sucessfully removed snipe lookback.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def add_pchannel(self,ctx,category):
@@ -219,8 +219,8 @@ class Configure(commands.Cog):
                 emb = discord.Embed(title="Private Channel Category added",
                                     description=f"Sucessfully added <#{category}> as a private channels category.",
                                     color=discord.Color.green())
-                emb.timestamp = datetime.datetime.utcnow()
-                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+                emb.timestamp = datetime.datetime.now()
+                emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
                 await ctx.reply(embed=emb)
         else:
             categories = [int(category)]
@@ -228,8 +228,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Private Channel Category added",
                                     description=f"Sucessfully added <#{category}> as a private channels category.",
                                     color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def remove_pchannel(self,ctx,category):
@@ -244,8 +244,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Mod Track Role remove",
                                 description=f"Sucessfully removed <#{category}> from mod roles.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def set_prefix(self,ctx,prefix):
@@ -258,8 +258,8 @@ class Configure(commands.Cog):
             emb = discord.Embed(title="Bot prefix changed",
                                 description=f"Sucessfully changed prefix to `{prefix}`.",
                                 color=discord.Color.green())
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed=emb)
 
     async def set_dj(self,ctx,dj):
@@ -269,8 +269,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Dj Role Set",
                                 description=f"Sucessfully changed the dj role to <@&{dj}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_dj(self,ctx):
@@ -280,8 +280,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed DJ Role",
                                 description=f"Sucessfully removed the dj role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_default(self,ctx,default):
@@ -291,8 +291,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Default Server Role Set",
                                 description=f"Sucessfully changed the default role to <@&{default}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_default(self,ctx):
@@ -302,8 +302,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Default Server Role",
                                 description=f"Sucessfully removed the default role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_lottery(self,ctx,lottery):
@@ -313,8 +313,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Lottery Mod Role Set",
                                 description=f"Sucessfully changed the lottery mod role to <@&{lottery}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_lottery(self,ctx):
@@ -324,8 +324,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Lottery Mod Role",
                                 description=f"Sucessfully removed the lottery mod role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_event(self,ctx,event):
@@ -335,8 +335,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Event Manager Role Set",
                                 description=f"Sucessfully changed the event manager role to <@&{event}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_event(self,ctx):
@@ -346,8 +346,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Event Manager Role",
                                 description=f"Sucessfully removed the event manager role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_giveaway(self,ctx,giveaway):
@@ -357,8 +357,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Event Manager Role Set",
                                 description=f"Sucessfully changed the giveaway manager role to <@&{giveaway}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_giveaway(self,ctx):
@@ -368,8 +368,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Giveaway Manager Role",
                                 description=f"Sucessfully removed the giveaway manager role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_eping(self,ctx,eping):
@@ -379,8 +379,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Event Ping Role Set",
                                 description=f"Sucessfully changed the event ping role to <@&{eping}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_eping(self,ctx):
@@ -390,8 +390,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Event Ping Role",
                                 description=f"Sucessfully removed the event ping role.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_echannel(self,ctx,echannel):
@@ -401,8 +401,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Event Channel Set",
                                 description=f"Sucessfully changed the event channel to <#{echannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_echannel(self,ctx):
@@ -412,8 +412,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Event Channel Setting",
                                 description=f"Sucessfully removed the event channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_flog(self,ctx,fchannel):
@@ -424,8 +424,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Freeloader Logging Channel Set",
                                 description=f"Sucessfully changed the freeloading log channel to <#{fchannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_flog(self,ctx):
@@ -435,8 +435,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Freeloader Logging Channel",
                                 description=f"Sucessfully removed the freeloader logging channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_glog(self,ctx,gchannel):
@@ -447,8 +447,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Giveaway Logging Channel Set",
                                 description=f"Sucessfully changed the giveaway log channel to <#{gchannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_glog(self,ctx):
@@ -458,8 +458,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Giveaway Logging Channel",
                                 description=f"Sucessfully removed the giveaway logging channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_elog(self,ctx,echannel):
@@ -470,8 +470,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Event Manager Logging Channel Set",
                                 description=f"Sucessfully changed the event logging channel to <#{echannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_elog(self,ctx):
@@ -481,8 +481,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Event Manager Logging Channel",
                                 description=f"Sucessfully removed the event logging channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_mlog(self,ctx,mchannel):
@@ -493,8 +493,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Mod Tracking Logging Channel Set",
                                 description=f"Sucessfully changed the mod track log channel to <#{mchannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_mlog(self,ctx):
@@ -504,8 +504,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Mod Tracking Logging Channel",
                                 description=f"Sucessfully removed the mod track logging channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def set_ilog(self,ctx,ichannel):
@@ -516,8 +516,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Invite Tracking Channel Set",
                                 description=f"Sucessfully changed the invite track channel to <#{ichannel}>.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_ilog(self,ctx):
@@ -527,8 +527,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Removed Invite Tracking Channel",
                                 description=f"Sucessfully removed the invite track channel.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def add_dono_role(self,ctx,amount,role):
@@ -546,8 +546,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Donation Role Added",
                                 description=f"Sucessfully added <@&{role}> as the role for `{amount}`.",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def remove_dono_role(self,ctx,amount):
@@ -568,8 +568,8 @@ class Configure(commands.Cog):
         emb = discord.Embed(title="Donation Role Removed",
                                 description=f"Sucessfully removed the donation role for `{amount}`",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     async def view_settings(self,ctx,category):
@@ -728,8 +728,8 @@ class Configure(commands.Cog):
 
             emb.add_field(name = "Dank Heist Default Role",value = f'This role indicates the role to which channel viewage is locked on a dank heist command. Usually set to a server access role, leave it unset to lock viewage to everyone role.\n**Server Settings:** {dheistdrole}',inline = False)
             emb.add_field(name = "Dank Lottery Mod Role",value = f'This role indicates who can start, end, cancel, and manage entries to a dank lottery with lottery category.\n**Server Settings:** {lotterymod}',inline = False)
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=emb)
 
     @commands.group(description = "Manage All Settings",help = "settings <option>",brief = "This command manages all configurable settings in the bot. Any user input that can have multiple options can be set using `add`, whild `set` will set any user input that is set to one option. You can remove any setting using `remove`. Try using `o!help settings <subcommand>` to see what you can configure.")
@@ -1059,8 +1059,8 @@ class Configure(commands.Cog):
                 return await ctx.reply("Hold up, seems that this command already enabled for these parameters!")
             ref.child(str(ctx.guild.id)).child("rules").child(command.name).child("aall").set(True)
             embed = discord.Embed(title = "Sucessfully Enabled!",description = f"Enabled the command **{command}** for everyone.")
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             return await ctx.reply(embed = embed)
         if not userinput.isnumeric():
             try:
@@ -1111,8 +1111,8 @@ class Configure(commands.Cog):
             return await ctx.reply("I could not process your input! Please try again.")
 
         embed = discord.Embed(title = "Sucessfully Enabled!",description = f"Enabled the command **{command}** for {userinputobj.mention}.")
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(description = "Disable certain commands for your server!",help = "disable <command> <user,role,channel,or all>",brief = "This command can help you disable commands for your server. Say you do not want people spamming the `iq` command in your general chat. You can disable it using the following:\n" + 
@@ -1128,8 +1128,8 @@ class Configure(commands.Cog):
                 return await ctx.reply("Hold up, seems that this command already enabled for these parameters!")
             ref.child(str(ctx.guild.id)).child("rules").child(command.name).child("dall").set(True)
             embed = discord.Embed(title = "Sucessfully Disabled!",description = f"Disabled the command **{command}** for everyone.")
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             return await ctx.reply(embed = embed)
         if not userinput.isnumeric():
             try:
@@ -1180,8 +1180,8 @@ class Configure(commands.Cog):
             return await ctx.reply("I could not process your input! Please try again.")
 
         embed = discord.Embed(title = "Sucessfully Disabled!",description = f"Disabled the command **{command}** for {userinputobj.mention}.")
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     
@@ -1237,8 +1237,8 @@ class Configure(commands.Cog):
         if dusers:
             embed.add_field(name = f"**Disabled Users:** ",value =' '.join(['<@' + str(b) + '>' for b in dusers]),inline = False)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
     
     @rules.command(name = "remove",description = "Remove a certain rule",help = "rules remove <command> <enable or disable> <rule application> <application>",brief = "The syntax for this command is slightly confusing, but do not worry! Here are some examples:\n" + 
@@ -1264,8 +1264,8 @@ class Configure(commands.Cog):
             else:
                 return await ctx.reply(f"Hold up, this command does not have a rule for {enabledisable} all!")
             embed = discord.Embed(title = "Sucessfully Revmoed!",description = f"Revmoed the {enabledisable} rule for the command **{command}** for everyone.")
-            embed.timestamp = datetime.datetime.utcnow()
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            embed.timestamp = datetime.datetime.now()
+            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             return await ctx.reply(embed = embed)
         if not userinput1.isnumeric():
             try:
@@ -1319,8 +1319,8 @@ class Configure(commands.Cog):
             return await ctx.reply("I could not process your input! Please try again.")
 
         embed = discord.Embed(title = "Sucessfully Removed!",description = f"Removed the {enabledisable} rule for the command **{command}** for {userinputobj.mention}.")
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
 def setup(client):

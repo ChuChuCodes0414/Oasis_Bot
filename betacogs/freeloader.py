@@ -132,8 +132,8 @@ class Freeloader(commands.Cog):
                         embed.set_thumbnail(url = member.avatar_url)
                         embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
                         embed.add_field(name = "Heist Joining Information",value = f'[Link to Result Message]({message.jump_url})',inline = False)
-                        embed.timestamp = datetime.datetime.utcnow()
-                        embed.set_footer(text = f'Oasis Bot Freeloader Tracking',icon_url = member.guild.icon_url)
+                        embed.timestamp = datetime.datetime.now()
+                        embed.set_footer(text = f'Oasis Bot Freeloader Tracking',icon_url = member.guild.icon)
                         channel = member.guild.get_channel(log)
                         
                         await channel.send(embed = embed)
@@ -253,8 +253,8 @@ class Freeloader(commands.Cog):
         embed.add_field(name="Potential Freeloaders",value=potentials,inline = False)
         embed.add_field(name="Other Statistics",value = f'New Member Count: {amountjoin}\nPeople Leaving After Heist: {amountleavers}\nLooking for Heist Messages in: {channel}\nTracking Messages: {messageamount}\nTracking: {tracking}')
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed=embed)
 
     @commands.command(description = "Embed showing who has joined the server within tracking period.",help = "joiners")
@@ -277,8 +277,8 @@ class Freeloader(commands.Cog):
         embed=discord.Embed(title="Server Joiners",description=f"List of most recent 30 people who have joined server within tracking period", color=discord.Color.green())
         embed.add_field(name="Joiners",value=build,inline=False)
 
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.reply(embed = embed)
 

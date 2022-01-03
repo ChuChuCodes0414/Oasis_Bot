@@ -552,8 +552,8 @@ class Winter(commands.Cog):
             build = "No data to show"
 
         embed = discord.Embed(title = f"Leaderboard for {ctx.guild.name} {self.event} Event",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(help = "givegingerbread <amount> <user>",description = "Give event items to other people.")
@@ -712,8 +712,8 @@ class Winter(commands.Cog):
                 break
 
         embed = discord.Embed(title = f"Team Leaderboard for {ctx.guild.name} {self.event} Event",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await message.edit("",embed = embed)
 
     @commands.command(help = "teamcreate <privacy> <name>",description = "Create a team, if team mode is on for your server.",brief = "Make sure to include a team name, and whether your team is public or private.")

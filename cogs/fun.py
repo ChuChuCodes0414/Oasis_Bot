@@ -181,8 +181,8 @@ class Fun(commands.Cog):
                             description=f"{build}",
                             color=discord.Color.blue())
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.reply(embed = emb)
 
@@ -322,7 +322,7 @@ class Fun(commands.Cog):
 
         embed = discord.Embed(title = "Guess the Number!",description = f"The range for this game is **{start}** - **{end}**",color = discord.Color.random())
         embed.set_author(name="Hosted by " + ctx.author.display_name,icon_url=ctx.author.avatar_url)
-        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=ctx.guild.icon)
         embed.set_footer(text = f"Good luck! You have 2 minutes to guess. {target}")
         message = await channel.send(embed = embed)
         def check(i):

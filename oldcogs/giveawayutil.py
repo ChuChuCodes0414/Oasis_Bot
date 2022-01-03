@@ -67,8 +67,8 @@ class GiveawayUtil(commands.Cog):
 
         emb.add_field(name = "Giveaway information:",value = f"[Link to Donation]({ctx.message.jump_url})\nDonated By: <@{member}> ({member})\nDonation Amount: {amount}")
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Giveaway Logging',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Giveaway Logging',icon_url = ctx.message.channel.guild.icon)
 
         await channel.send(embed = emb)
    
@@ -122,7 +122,7 @@ class GiveawayUtil(commands.Cog):
 
         emb = discord.Embed(title=f"Giveaway Categories for {ctx.guild.name}",description = f"{store}",
                                 color=discord.Color.green())
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = emb)
 
     async def remove_giveaway_amount(self,ctx,user,amount,category = None):
@@ -252,8 +252,8 @@ class GiveawayUtil(commands.Cog):
 
             for category in profile:
                 emb.add_field(name = category,value = f'> {profile[category]:,}',inline = False)
-            emb.timestamp = datetime.datetime.utcnow()
-            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+            emb.timestamp = datetime.datetime.now()
+            emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             await ctx.reply(embed = emb)
 
     async def get_leaderboard(self,ctx,category = None):
@@ -297,8 +297,8 @@ class GiveawayUtil(commands.Cog):
                             description=f"{build}",
                             color=discord.Color.blue())
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
 
         await ctx.reply(embed = emb)
 
@@ -383,8 +383,8 @@ class GiveawayUtil(commands.Cog):
 
             if count >= 10:
                 break
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
     @commands.command(description = "Check giveaway manager log amount.",help = "gamount")
@@ -402,8 +402,8 @@ class GiveawayUtil(commands.Cog):
         amount = await self.get_gamount(ctx,str(member.id))
 
         embed=discord.Embed(title="Giveways Hosted",description = f'{member.mention}: `{amount}` giveaways', color=discord.Color.blue())
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon_url)
+        embed.timestamp = datetime.datetime.now()
+        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
         await ctx.reply(embed = embed)
 
 

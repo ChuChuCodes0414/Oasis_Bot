@@ -49,8 +49,8 @@ class ModTracking(commands.Cog):
 
         emb.add_field(name = "Action Recorded:",value = f"[Link to Command]({ctx.message.jump_url})\nAction Details: {action}")
 
-        emb.timestamp = datetime.datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Mod Logging',icon_url = ctx.message.channel.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Mod Logging',icon_url = ctx.message.channel.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -73,7 +73,7 @@ class ModTracking(commands.Cog):
         if modtracking == None:
             modtracking = []
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         formatnow = str(now.month) + "-" + str(now.day) + "-" + str(now.year) + " " + str(now.hour) + ":" + str(now.minute)
 
         modtracking.append([action,formatnow])
