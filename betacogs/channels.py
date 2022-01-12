@@ -10,6 +10,7 @@ class Channels(commands.Cog):
     """
     def __init__(self,client):
         self.client = client
+        self.short = "💬 | Channel Management"
 
     async def cog_check(self, ctx):
         return True

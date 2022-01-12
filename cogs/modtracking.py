@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents, Button
 import firebase_admin
 from firebase_admin import db
 import datetime

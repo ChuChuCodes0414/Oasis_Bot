@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents, Button, Select, SelectOption, Interaction
 import datetime
 import math
 import firebase_admin

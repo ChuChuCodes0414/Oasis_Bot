@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 from itertools import cycle
 import firebase_admin
 from firebase_admin import db
-from discord_components import DiscordComponents
 import sensitive
 import asyncio
 from discord.embeds import EmptyEmbed
@@ -78,8 +77,8 @@ def get_prefix(client,message):
 
 intents = discord.Intents.default()
 intents.members = True
-client = commands.Bot(command_prefix = get_prefix, intents = intents)
-client.remove_command('help')
+client = discord.ext.commands.Bot(command_prefix = get_prefix, intents = intents)
+#client.remove_command('help')
 
 if not beta:
     status = cycle(['with your feelings','o!help | @Oasis Bot setup'])
@@ -92,7 +91,6 @@ else:
 async def on_ready():
     change_status.start()
     check_status.start()
-    DiscordComponents(client)
     print('Bot is online.')
     
 
@@ -262,15 +260,16 @@ def global_check(ctx):
         return True
 
 # cogs loading on startup
+'''
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
 '''
+
 if beta:
     for filename in os.listdir('./betacogs'):
         if filename.endswith('.py'):
             client.load_extension(f'betacogs.{filename[:-3]}')
-'''
 
 
 client.load_extension("jishaku")

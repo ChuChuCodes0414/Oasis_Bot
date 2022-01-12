@@ -1,7 +1,6 @@
 import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
-from discord_components import DiscordComponents, Button
 import datetime
 import firebase_admin
 from firebase_admin import db

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-
+from discord.commands import slash_command
 import firebase_admin
 from firebase_admin import db
 import datetime
@@ -8,7 +8,7 @@ from datetime import datetime
 import math
 import asyncio
 
-class Mod(commands.Cog):
+class Mod(discord.ext.commands.Cog):
     """
         Simple mod commands, like kick and ban.
         \n**Setup for this Category**
@@ -16,6 +16,7 @@ class Mod(commands.Cog):
     """
     def __init__(self,client):
         self.client = client
+        self.short = "<:bantime:930623021180387328> | Mod commands!"
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -37,27 +38,6 @@ class Mod(commands.Cog):
             else:
                 return False
         return commands.check(predicate)
-    
-    async def pull_data(self,guild,member):
-        ref = db.reference("/",app = firebase_admin._apps['modlogs'])
-        modlogs = ref.child(str(guild)).child(str(member)).get()
-
-        return modlogs
-
-    async def set_data(self,guild,member,action,reason,mod):
-        ref = db.reference("/",app = firebase_admin._apps['modlogs'])
-        modlogs = ref.child(str(guild)).child(str(member)).get()
-
-        if modlogs == None:
-            modlogs = []
-
-        now = datetime.now()
-        formatnow = str(now.month) + "-" + str(now.day) + "-" + str(now.year) + " " + str(now.hour) + ":" + str(now.minute)
-
-        modlogs.append([action,formatnow,reason,mod])
-
-        ref.child(str(guild)).child(str(member)).set(modlogs)
-    
 
     @commands.Cog.listener()
     async def on_member_join(self,member):
@@ -66,7 +46,7 @@ class Mod(commands.Cog):
             now = datetime.now()
             diff = now - date
 
-            if diff.days < 30:
+            if diff.days < 30 and diff.days > 3:
                 embed=discord.Embed(title=f"⚠ Alert For {member}",description=f"`There is an account under 30 days old!`", color=discord.Color.red())
                 embed.set_thumbnail(url = member.avatar_url)
                 embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
@@ -76,27 +56,20 @@ class Mod(commands.Cog):
                 channel = self.client.get_channel(825882336594886687)
                 await channel.send(embed=embed)\
 
-
-    @commands.command(description = "Change a member's nickname.",help = "setnick <member> <nickname>")
+    @commands.command(help = "Change a member's nickname.")
     @commands.has_permissions(manage_nicknames = True) 
-    async def setnick(self,ctx, member,*,nickname = None):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
+    async def setnick(self,ctx, member:discord.Member,*,nickname = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply("You cannot change the nickname of people who have a higher role than you.")
+            await ctx.reply(embed = discord.Embed(description = "You cannot change the nickname of people who have a higher or euqal role as you.",color = discord.Color.red()),mention_author = False)
         elif bot_top_ob <= member.top_role:
-            await ctx.reply("Does not seem like I can change that person's nickname, since their top role is higher than my top role.")
+            await ctx.reply(embed = discord.Embed(description = "Does not seem like I can change that person's nickname, since their top role is higher than my top role.",color = discord.Color.red()),mention_author = False)
         else:
             await member.edit(nick=nickname)
-            await ctx.reply("Edited member's nickname.")
+            await ctx.reply(embed = discord.Embed(description = f"Edited {member}'s nickname to: `{nickname}`",color = discord.Color.green()),mention_author = False)
 
-    @commands.command(description = "Give/remove a role to someone else.",help = "role <member> <role>")
+    @commands.command(help = "Give/remove a role to someone else.")
     @commands.has_permissions(manage_roles = True) 
     async def role(self,ctx, member:discord.Member,role:discord.Role):
         bot_top = ctx.guild.get_member(self.client.user.id)
@@ -113,7 +86,7 @@ class Mod(commands.Cog):
             await member.add_roles((role))
             await ctx.send(f"Added **{role.name}** to **{member}**")
 
-    @commands.command(aliases = ['k'],description = "Kick a member from the server.",help = "kick <member>")
+    @commands.command(aliases = ['k'],help = "Kick a member from the server.")
     @commands.has_permissions(kick_members = True) 
     async def kick(self,ctx, member,*,reason = None):
         guild = ctx.guild
@@ -139,7 +112,7 @@ class Mod(commands.Cog):
             await member.kick(reason=reason)
             await ctx.reply(f'**{member}** was kicked out of the server.')
 
-    @commands.command(aliases = ['b'],description = "Ban a member from the server",help = "ban <member>")
+    @commands.command(aliases = ['b'],help = "Ban a member from the server")
     @commands.has_permissions(ban_members = True) 
     async def ban(self,ctx,member, *,reason = None):
         guild = ctx.guild
@@ -168,7 +141,7 @@ class Mod(commands.Cog):
             await member.ban(reason=reason)
             await ctx.reply(f'**{member}** was banned from the server.')
 
-    @commands.command(aliases = ['mb'],description = "Mass ban members from the server",help = "massban <members>")
+    @commands.command(aliases = ['mb'],help = "Mass ban members from the server")
     @commands.has_permissions(ban_members = True) 
     async def massban(self,ctx,*,members,):
         guild = ctx.guild
@@ -200,7 +173,7 @@ class Mod(commands.Cog):
         except:
             await ctx.send(f"Banned **{count}** members")
 
-    @commands.command(description = "Unban a member from the server.",help = "unban <member>")
+    @commands.command(help = "Unban a member from the server.")
     @commands.has_permissions(ban_members = True) 
     async def unban(self,ctx,member,*,reason=None):
         banned_users = await ctx.guild.bans()
@@ -216,66 +189,6 @@ class Mod(commands.Cog):
                 return
         await ctx.reply("I cannot find this person on the bans list!")
 
-    @commands.command(description = "Warn a member.",help = "warn <member> <reason>")
-    @mod_role_check()
-    async def warn(self,ctx,member,*, reason):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        await self.set_data(guild.id, member.id, 'Warn', reason, str(ctx.message.author))
-
-        await ctx.reply(f'Warned **{member}** for {reason}')
-
         
-    @commands.command(description = "Check modlogs of a member.",help = "modlogs <member>")
-    @mod_role_check()
-    async def modlogs(self,ctx,member,index = 1):
-        guild = ctx.guild
-        store = member
-
-        if member.isnumeric():
-            member = await self.client.fetch_user(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-
-        logs = await self.pull_data(guild.id, member.id)
-
-        if not logs:
-            logs = []
-
-        logs.reverse()
-        embed=discord.Embed(title=f"Mod Logs for {member.name}",description=f"{len(logs)} items found for {member.mention}", color=discord.Color.green())
-
-        index = int(index)
-        logamount = len(logs)
-        if index > 1:
-            if (index - 1) * 9 < logamount:
-                if int(index) * 9 > logamount:
-                    end = logamount 
-                else:
-                    end = (index)*9
-                
-                start = (index-1) * 9
-            else:
-                return await ctx.reply(f"There are not {index} pages.")
-        else:
-            start = 0
-            if logamount > 9:
-                end = 9
-            else:
-                end = logamount 
-        for log in range(start,end):
-            embed.add_field(name=f'Action {log+1}',value = f'**Action:** {logs[log][0]}\n{logs[log][1]}\n**Reason:** {logs[log][2]}\n**Moderator:** {logs[log][3]}',inline = True)
-
-        embed.set_footer(text=f"Showing page {index} out of {math.ceil(logamount/9)}")
-
-        await ctx.reply(embed = embed)
-
-        
-
 def setup(client):
     client.add_cog(Mod(client))
