@@ -2,11 +2,11 @@ from typing import runtime_checkable
 import discord
 from discord.ext import commands
 import datetime
-import math
 import firebase_admin
 from firebase_admin import db
 import random
 import asyncio
+import locale
 
 class Lottery(commands.Cog):
     '''
@@ -15,6 +15,7 @@ class Lottery(commands.Cog):
         Lottery Mod: `o!settings set lotterymod <role>` 
     '''
     def __init__(self,client):
+        self.short = "🎫 | Dank Memer Lottery"
         self.client = client
         self.active_channels = []
 
@@ -41,6 +42,7 @@ class Lottery(commands.Cog):
                         self.active_channels.append(int(channel))
                 except:
                     pass
+        locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' ) 
         print('Lottery Cog Loaded, and lotteries cached.')
 
     @commands.Cog.listener()
@@ -48,62 +50,46 @@ class Lottery(commands.Cog):
         if message.author.id != 270904126974590976 or message.channel.id not in self.active_channels:
             return
 
+        dictionary = message.embeds
+        if dictionary:
+            dictionary = dictionary[0].to_dict()
+        else:
+            return
         ref = db.reference("/",app = firebase_admin._apps['lottery'])
         guild = message.guild.id
-
         active = ref.child(str(guild)).child(str(message.channel.id)).child("active").get()
-
         if not active:
             return
-        found = False
         thelottery = ref.child(str(guild)).child(str(message.channel.id)).get()
         host = thelottery['host']
         hostob = message.guild.get_member(int(host))
-        splitmessage = message.content.split()
         wayentered = None
-        if "coins" in thelottery['entrymethods']:
+        try:
+            methods = dictionary["fields"][0]["name"] 
+        except:
+            return
+        if methods == "Gifted":
+            methods = "gift"
+        elif methods == "Shared":
+            methods = "coin"
+        else:
+            return
+        if "coins" in thelottery['entrymethods'] and methods == "coin" and hostob.name in dictionary["fields"][2]["name"]:
             priceamount = thelottery['entrymethods']['coins']['amount']
             entriesper = thelottery['entrymethods']['coins']['entries']
-            if len(splitmessage) >= 3:
-                if splitmessage[1] == "You" and splitmessage[2] == "gave" and splitmessage[3] == hostob.name and splitmessage[4] == "**⏣":
-                    amount = splitmessage[5]
-                    sendamount = (amount.strip("*,"))
-                    sendamount = sendamount.replace(',','')
-                    sendamount = int(sendamount)
-                    userinput = splitmessage[0]
-                    userinput = userinput.replace("<",'') 
-                    userinput = userinput.replace(">",'') 
-                    userinput = userinput.replace("@",'') 
-                    userinput = userinput.replace("!",'')
-                    userinput = userinput.replace("&",'')
-                    userinput = userinput.replace("#",'')
-                    userinput = int(userinput)
-                    wayentered = "Coins"
-                    found = True
-        
-        if not found:
+            sendamount = int(locale.atoi(dictionary['fields'][0]['value'].split()[1][:-1]))
+            wayentered = "coins"
+        elif methods == "gift" and hostob.name in dictionary["fields"][2]["name"]:
             for price,data in thelottery['entrymethods'].items():
                 wayentered = price
-                price = "**"+price+ "**,"
-                if price in message.content and hostob.name in splitmessage:
+                if price in dictionary["fields"][0]["value"]:
                     priceamount = data['amount']
                     entriesper = data['entries']
-                    found = True
+                    sendamount = int(locale.atoi(dictionary["fields"][0]["value"].split()[0][1:-2]))
                     break
-            if found and splitmessage[1] == "You" and splitmessage[2] == "gave" and splitmessage[3] == hostob.name and splitmessage[0].startswith("<@") and splitmessage[0].endswith(">"):
-                sendamount = splitmessage[4].replace(',','')
-                sendamount = int(sendamount)
-                userinput = splitmessage[0]
-                userinput = userinput.replace("<",'') 
-                userinput = userinput.replace(">",'') 
-                userinput = userinput.replace("@",'') 
-                userinput = userinput.replace("!",'')
-                userinput = userinput.replace("&",'')
-                userinput = userinput.replace("#",'')
-                userinput = int(userinput)
-
-        if not found:
+        else:
             return
+        userinput = message.reference.cached_message.author.id
         try:
             entrycount = sendamount//int(priceamount)
             entrycount *= entriesper

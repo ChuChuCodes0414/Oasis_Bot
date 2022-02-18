@@ -4,7 +4,6 @@ Procfile
 Aptfile
 requirements.txt
 .vscode/
-musicbot/config.py
 cogs/__pycache__/
 musicbot/__pycache__/
 __pycache__/

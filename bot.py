@@ -12,6 +12,8 @@ import sensitive
 import asyncio
 from discord.embeds import EmptyEmbed
 import time
+import asyncpg
+#from discord_components import DiscordComponents, ComponentsBot, Button
 
 beta = True
 
@@ -78,13 +80,14 @@ def get_prefix(client,message):
 intents = discord.Intents.default()
 intents.members = True
 client = discord.ext.commands.Bot(command_prefix = get_prefix, intents = intents)
+#DiscordComponents(client)
+
 #client.remove_command('help')
 
 if not beta:
     status = cycle(['with your feelings','o!help | @Oasis Bot setup'])
 else:
     status = cycle(['with new code!',',help | @Serenity Bot setup'])
-
 
 
 @client.event
@@ -197,7 +200,7 @@ async def on_message(message):
                 embed = discord.Embed(title="Hello!",description=f"The prefix in this server is: `{prefix}`", color=discord.Color.green())
             else:
                 embed = discord.Embed(title="Hello!",description=f"It seems like this server is not set up! Run `@Oasis Bot setup` to get started.", color=discord.Color.green())
-            await message.reply(embed =embed,mention_author = False)
+            await message.reply(embed =embed)
         elif message.content == mention + " setup":
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             if not ref.child(str(message.guild.id)).get():
@@ -207,11 +210,11 @@ async def on_message(message):
                 embed = discord.Embed(title="All set up!",description=f"You are all set up! The default prefix is `o!`", color=discord.Color.green())
             else:
                 embed = discord.Embed(title="Uh oh",description=f"It looks like this server is already set up!", color=discord.Color.green())
-            await message.reply(embed =embed,mention_author = False)
+            await message.reply(embed =embed)
         else:
             await client.process_commands(message)
     else:
-        await message.reply("Commands are not allowed in dms!",mention_author = False)
+        await message.reply("Commands are not allowed in dms!")
 
 
 @client.check
@@ -259,20 +262,25 @@ def global_check(ctx):
         
         return True
 
+client._BotBase__cogs  = commands.core._CaseInsensitiveDict()
 # cogs loading on startup
 '''
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
 '''
-
 if beta:
     for filename in os.listdir('./betacogs'):
         if filename.endswith('.py'):
             client.load_extension(f'betacogs.{filename[:-3]}')
 
-
+#client.load_extension(f'testingtrades.testingevent')
 client.load_extension("jishaku")
+
+#POSTGRES_INFO = {"dsn":"postgres://postgres:ChuisCool0414$@localhost:5432/postgres"}
+#loop = asyncio.get_event_loop()
+#client.pool = loop.run_until_complete(asyncpg.create_pool(**POSTGRES_INFO))
+
 
 if beta:
     client.run(sensitive.BETA_BOT_TOKEN)

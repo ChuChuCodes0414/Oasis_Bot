@@ -9,13 +9,8 @@ import uuid
 import os
 
 class LoggingError(commands.Cog):
-    '''
-        Hey you found an easter egg! But not really. This module is used for backend stuff, so there's really nothing here.
-    '''
-
     def __init__(self,client):
         self.client = client
-    
 
     async def send_error_embed(self,ctx,message):
         embed = discord.Embed(description = message,color = discord.Color.red())
@@ -28,6 +23,28 @@ class LoggingError(commands.Cog):
                 await ctx.send(embed= embed)
             except:
                 pass
+
+    def get_command_signature(self, command,context):
+        parent = command.parent
+        entries = []
+        while parent is not None:
+            if not parent.signature or parent.invoke_without_command:
+                entries.append(parent.name)
+            else:
+                entries.append(parent.name + ' ' + parent.signature)
+            parent = parent.parent
+        parent_sig = ' '.join(reversed(entries))
+
+        if len(command.aliases) > 0:
+            aliases = '|'.join(command.aliases)
+            fmt = f'[{command.name}|{aliases}]'
+            if parent_sig:
+                fmt = parent_sig + ' ' + fmt
+            alias = fmt
+        else:
+            alias = command.name if not parent_sig else parent_sig + ' ' + command.name
+
+        return f'{context.clean_prefix}{alias} {command.signature}'
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -67,7 +84,7 @@ class LoggingError(commands.Cog):
             return
 
         if isinstance(error, commands.MissingPermissions):
-            missing = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_perms]
+            missing = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in error.missing_permissions]
             if len(missing) > 2:
                 fmt = '{}, and {}'.format("**, **".join(missing[:-1]), missing[-1])
             else:
@@ -77,7 +94,7 @@ class LoggingError(commands.Cog):
             return
 
         if isinstance(error, commands.UserInputError):
-            embed = discord.Embed(title = f'⚠ Invalid Input',description = f'**Command Usage:** {ctx.command.help}\n**Command Information:** {ctx.command.description}',color = discord.Color.red())
+            embed = discord.Embed(title = f'⚠ Invalid Input',description = f'**Command Usage:** {self.get_command_signature(ctx.command,ctx)}\n**Command Information:** {ctx.command.help}',color = discord.Color.red())
             embed.timestamp = datetime.datetime.now()
             embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             try:

@@ -21,6 +21,7 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.short = "🎶 | Music Commands"
         
     @commands.Cog.listener()
     async def on_ready(self):
@@ -36,14 +37,14 @@ class Music(commands.Cog):
         guild_to_audiocontroller[guild] = AudioController(self.bot, guild)
 
     # logic is split to uconnect() for wide usage
-    @commands.command(name='connect', brief=config.HELP_CONNECT_LONG, description=config.HELP_CONNECT_SHORT, aliases=['c','join'],help = "connect")
+    @commands.command(name='connect', brief=config.HELP_CONNECT_LONG, help=config.HELP_CONNECT_SHORT, aliases=['c','join'])
     async def _connect(self, ctx):  # dest_channel_name: str
         current_guild = utils.get_guild(self.bot, ctx.message)
         audiocontroller = utils.guild_to_audiocontroller[current_guild]
         if await audiocontroller.uconnect(ctx):
             await ctx.send(embed = discord.Embed(description = f"Connected to `{ctx.author.voice.channel}`",color = discord.Color.random()))
 
-    @commands.command(name='disconnect', brief=config.HELP_DISCONNECT_LONG, description=config.HELP_DISCONNECT_SHORT, aliases=['dc'],help = "disconnect")
+    @commands.command(name='disconnect', brief=config.HELP_DISCONNECT_LONG, help=config.HELP_DISCONNECT_SHORT, aliases=['dc'])
     async def _disconnect(self, ctx):
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
@@ -53,7 +54,7 @@ class Music(commands.Cog):
         await audiocontroller.udisconnect()
         await ctx.send(embed = discord.Embed(description = f"Disconnected Successfully!",color = discord.Color.random()))
 
-    @commands.command(name='reset', brief=config.HELP_DISCONNECT_LONG, description=config.HELP_DISCONNECT_SHORT, aliases=['rs', 'restart'],help = "reset")
+    @commands.command(name='reset', brief=config.HELP_DISCONNECT_LONG, help=config.HELP_DISCONNECT_SHORT, aliases=['rs', 'restart'])
     async def _reset(self, ctx):
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
@@ -69,7 +70,7 @@ class Music(commands.Cog):
 
         await ctx.send(embed = discord.Embed(description = f"Connected to `{ctx.author.voice.channel}`",color = discord.Color.random()))
 
-    @commands.command(name='changechannel', brief=config.HELP_CHANGECHANNEL_LONG, description=config.HELP_CHANGECHANNEL_SHORT, aliases=['cc'],help = "changechannel")
+    @commands.command(name='changechannel', brief=config.HELP_CHANGECHANNEL_LONG, help=config.HELP_CHANGECHANNEL_SHORT, aliases=['cc'])
     async def _change_channel(self, ctx):
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
@@ -91,7 +92,7 @@ class Music(commands.Cog):
 
         await ctx.send(embed = discord.Embed(description = f"Switched to `{ctx.author.voice.channel}`",color = discord.Color.random()))
 
-    @commands.command(name='play', brief=config.HELP_YT_LONG, description=config.HELP_YT_SHORT, aliases=['p', 'yt', 'pl'],help = "play <song>")
+    @commands.command(name='play', brief=config.HELP_YT_LONG, help=config.HELP_YT_SHORT, aliases=['p', 'yt', 'pl'])
     async def _play_song(self, ctx, *, track: str):
         async with ctx.typing():
             current_guild = utils.get_guild(self.bot, ctx.message)
@@ -132,7 +133,7 @@ class Music(commands.Cog):
             elif song.origin == linkutils.Origins.Playlist:
                 await ctx.send(embed = discord.Embed(description = f"Playlist Queued",color = discord.Color.random()))
 
-    @commands.command(name='loop', brief=config.HELP_LOOP_LONG, description=config.HELP_LOOP_SHORT, aliases=['l'],help = "loop")
+    @commands.command(name='loop', brief=config.HELP_LOOP_LONG, help=config.HELP_LOOP_SHORT, aliases=['lo'])
     async def _loop(self, ctx):
 
         current_guild = utils.get_guild(self.bot, ctx.message)
@@ -152,7 +153,7 @@ class Music(commands.Cog):
             audiocontroller.playlist.loop = False
             await ctx.send(embed = discord.Embed(description = f"Loop Disabled! ❌",color = discord.Color.random()))
 
-    @commands.command(name='shuffle', brief=config.HELP_SHUFFLE_LONG, description=config.HELP_SHUFFLE_SHORT, aliases=["sh"],help = "shuffle")
+    @commands.command(name='shuffle', brief=config.HELP_SHUFFLE_LONG, help=config.HELP_SHUFFLE_SHORT, aliases=["sh"])
     async def _shuffle(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
         audiocontroller = utils.guild_to_audiocontroller[current_guild]
@@ -170,7 +171,7 @@ class Music(commands.Cog):
         for song in list(audiocontroller.playlist.playque)[:config.MAX_SONG_PRELOAD]:
             asyncio.ensure_future(audiocontroller.preload(song))
         
-    @commands.command(name = 'remove',brief = "Remove a song, by index, from the playlist.",description = "Remove a song.",aliases = ["re"],help = "remove <index>")
+    @commands.command(name = 'remove',brief = "Remove a song, by index, from the playlist.",help = "Remove a song.",aliases = ["re"])
     async def _remove(self,ctx,index:int):
         if index < 1:
             return await ctx.send(embed = discord.Embed(description = "Index must be at least one!",color = discord.Color.red()))
@@ -193,7 +194,7 @@ class Music(commands.Cog):
         else:
             await ctx.send(embed = discord.Embed(description = f"Removed `{index}` from the playlist",color = discord.Color.random()))
 
-    @commands.command(name='pause', brief=config.HELP_PAUSE_LONG, description=config.HELP_PAUSE_SHORT,help = "pause")
+    @commands.command(name='pause', brief=config.HELP_PAUSE_LONG, help=config.HELP_PAUSE_SHORT)
     async def _pause(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -205,7 +206,7 @@ class Music(commands.Cog):
         current_guild.voice_client.pause()
         await ctx.send(embed = discord.Embed(description = f"Audio Paused! ⏸",color = discord.Color.random()))
 
-    @commands.command(name='queue', brief=config.HELP_QUEUE_LONG, description=config.HELP_QUEUE_SHORT, aliases=['playlist', 'q'],help = "queue")
+    @commands.command(name='queue', brief=config.HELP_QUEUE_LONG, help=config.HELP_QUEUE_SHORT, aliases=['playlist', 'q'])
     async def _queue(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -233,7 +234,7 @@ class Music(commands.Cog):
         embed.description = description
         await ctx.send(embed=embed)
 
-    @commands.command(name='stop', brief=config.HELP_STOP_LONG, description=config.HELP_STOP_SHORT, aliases=['st'],help = "stop")
+    @commands.command(name='stop', brief=config.HELP_STOP_LONG, help=config.HELP_STOP_SHORT, aliases=['st'])
     async def _stop(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -246,7 +247,7 @@ class Music(commands.Cog):
         await utils.guild_to_audiocontroller[current_guild].stop_player()
         await ctx.send(embed = discord.Embed(description = f"Music stopped and queue cleared!",color = discord.Color.random()))
 
-    @commands.command(name='skip', brief=config.HELP_SKIP_LONG, description=config.HELP_SKIP_SHORT, aliases=['s'],help = "skip")
+    @commands.command(name='skip', brief=config.HELP_SKIP_LONG, help=config.HELP_SKIP_SHORT, aliases=['s'])
     async def _skip(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -265,7 +266,7 @@ class Music(commands.Cog):
         current_guild.voice_client.stop()
         await ctx.send(embed = discord.Embed(description = f"Current song skipped! ⏩",color = discord.Color.random()))
 
-    @commands.command(name='clear', brief=config.HELP_CLEAR_LONG, description=config.HELP_CLEAR_SHORT,help = "clear")
+    @commands.command(name='clear', brief=config.HELP_CLEAR_LONG, help=config.HELP_CLEAR_SHORT)
     async def _clear(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -278,7 +279,7 @@ class Music(commands.Cog):
         audiocontroller.playlist.loop = False
         await ctx.send(embed = discord.Embed(description = f"Queue Cleared! 🚫",color = discord.Color.random()))
 
-    @commands.command(name='prev', brief=config.HELP_PREV_LONG, description=config.HELP_PREV_SHORT, aliases=['back'],help = "prev")
+    @commands.command(name='prev', brief=config.HELP_PREV_LONG, help=config.HELP_PREV_SHORT, aliases=['back'])
     async def _prev(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -294,7 +295,7 @@ class Music(commands.Cog):
         await utils.guild_to_audiocontroller[current_guild].prev_song()
         await ctx.send(embed = discord.Embed(description = f"Playing previous song! ⏮",color = discord.Color.random()))
 
-    @commands.command(name='resume', brief=config.HELP_RESUME_LONG, description=config.HELP_RESUME_SHORT,help = "resume")
+    @commands.command(name='resume', brief=config.HELP_RESUME_LONG, help=config.HELP_RESUME_SHORT)
     async def _resume(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -304,7 +305,7 @@ class Music(commands.Cog):
         current_guild.voice_client.resume()
         await ctx.send(embed = discord.Embed(description = f"Resumed Audio ⏯",color = discord.Color.random()))
 
-    @commands.command(name='songinfo', brief=config.HELP_SONGINFO_LONG, description=config.HELP_SONGINFO_SHORT, aliases=["np"],help = "songinfo")
+    @commands.command(name='songinfo', brief=config.HELP_SONGINFO_LONG, help=config.HELP_SONGINFO_SHORT, aliases=["np"])
     async def _songinfo(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -316,7 +317,7 @@ class Music(commands.Cog):
             return
         await ctx.send(embed=song.info.format_output(config.SONGINFO_SONGINFO))
 
-    @commands.command(name='history', brief=config.HELP_HISTORY_LONG, description=config.HELP_HISTORY_SHORT,help = "history")
+    @commands.command(name='history', brief=config.HELP_HISTORY_LONG, help=config.HELP_HISTORY_SHORT)
     async def _history(self, ctx):
         current_guild = utils.get_guild(self.bot, ctx.message)
 
@@ -324,7 +325,7 @@ class Music(commands.Cog):
             return
         await ctx.send(embed = discord.Embed(titple = "Recent Songs Played",description = utils.guild_to_audiocontroller[current_guild].track_history(),color = discord.Color.random()))
 
-    @commands.command(name='volume', aliases=["vol"], brief=config.HELP_VOL_LONG, description=config.HELP_VOL_SHORT,help = "volume <volume>")
+    @commands.command(name='volume', aliases=["vol"], brief=config.HELP_VOL_LONG, help=config.HELP_VOL_SHORT)
     async def _volume(self, ctx, *args):
         if await utils.play_check(ctx) == False:
             return

@@ -10,7 +10,7 @@ import asyncio
 class DankCafe(commands.Cog):
     def __init__(self,client):
         self.client = client
-
+        self.short = "<a:cafe:936457917400494141> | Custom for Cafe"
     @commands.Cog.listener()
     async def on_ready(self):
         print('DankCafe Cog Loaded.')
@@ -51,124 +51,62 @@ class DankCafe(commands.Cog):
                 return False
         return commands.check(predicate)
 
-    @commands.command(description = "Lock the view of a specified channel for everyone, or only a certain role.",help = "eviewlock <role>")
+    @commands.command(help ="Lock the view of a specified channel for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to false/red in a channel.")
     @commands.has_role(825824551920467968)
     async def eviewlock(self,ctx, role : discord.Role = "all"):
-        #await ctx.send('Attemping to unlock channel...')
         channel = ctx.channel
-
         if channel.id == 820538118360662037 or channel.id == 847886025006907482 or channel.id == 820538471977844757:
+            channel = channel or ctx.channel
             if role == "all":
                 role = ctx.guild.default_role
-                
-            serveraccess = ctx.guild.get_role(826841382973997127)
-            overwrite = ctx.channel.overwrites_for(serveraccess)
-            overwrite.view_channel = False
-            await ctx.channel.set_permissions(serveraccess, overwrite=overwrite)
-
             overwrite = channel.overwrites_for(role)
-            overwrite.view_channel = True
+            if overwrite.view_channel == False:
+                return await ctx.send(embed = discord.Embed(description = f"Channel {channel.mention} is already viewlocked for {role.mention}!\n\nNote: If someone with this role can still see the channel, it is likely they have another role/override that allows them to see the channel.",color = discord.Color.red()))
+            overwrite.view_channel = False
             await channel.set_permissions(role, overwrite=overwrite)
-            embed=discord.Embed(description=f"**Channel View Locked**\nChannel View Locked for {role.mention} in {channel.mention}")
+            embed=discord.Embed(description=f"🔒 Channel {channel.mention} viewlocked for {role.mention}",color = discord.Color.green())
+            embed.set_footer(text = "Run [prefix]viewunlock [role] [channel] to unlock it again!")
             await ctx.reply(embed = embed)
         else:
-            await ctx.send("You can't use that command here")
-
-    @commands.command(description = "Unlock the view of a specified channel for everyone, or only a certain role.",help = "eviewunlock <role>")
+            await ctx.send("You can't use that command here!")
+    
+    @commands.command(help ="Set the view of a specified channel to neutral for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to neutral/gray in a channel.")
     @commands.has_role(825824551920467968)
-    async def eviewunlock(self,ctx, role : discord.Role = "all"):
-        #await ctx.send('Attemping to unlock channel...')
+    async def eviewneutral(self,ctx, role : discord.Role = "all"):
         channel = ctx.channel
         if channel.id == 820538118360662037 or channel.id == 847886025006907482 or channel.id == 820538471977844757:
             if role == "all":
                 role = ctx.guild.default_role
-
-            serveraccess = ctx.guild.get_role(826841382973997127)
-            overwrite = ctx.channel.overwrites_for(serveraccess)
-            overwrite.view_channel = True
-            await ctx.channel.set_permissions(serveraccess, overwrite=overwrite)
-
             overwrite = channel.overwrites_for(role)
+            if overwrite.view_channel == None:
+                return await ctx.send(embed = discord.Embed(description = f"Channel {channel.mention} is already view set to neutral for {role.mention}!\n\nNote: If someone with this role cannot see the channel, it is likely they have another role/override that is set to red/deny.",color = discord.Color.red()))
             overwrite.view_channel = None
             await channel.set_permissions(role, overwrite=overwrite)
-
-            embed=discord.Embed(description=f"**Channel View Unlocked**\nChannel View Unlocked for {role.mention} in {channel.mention}")
+            embed=discord.Embed(description=f"Channel {channel.mention} view set to neutral for {role.mention}",color = discord.Color.green())
+            embed.set_footer(text = "Run [prefix]viewlock [role] [channel] to lock it again!")
             await ctx.reply(embed = embed)
         else:
-            await ctx.send("You can't use that command here")
+            await ctx.send("You can't use that command here!")
 
-    @commands.command(aliases = ["dha"],description = "Add certain amount to someone dank hunt profile.",help = "dankhuntadd <count> <member>")
-    @mod_role_check()
-    async def dankhuntadd(self,ctx,count:int,member:discord.Member):
-        if count <= 0:
-            return await ctx.reply("How you planning to add negative entries you big brain.")
-        ref = db.reference("/",app = firebase_admin._apps['lottery'])
-
-        current = ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).get() or 0
-
-        ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).set(int(current) + count)
-
-        embed = discord.Embed(title = f"Entries Added!",description = f"Added `{count}` entries for {member}. They now have `{int(current) + count}` total entries in this dank hunt!", color = discord.Color.random())
-
-        await ctx.reply(embed = embed)
-
-    @commands.command(aliases = ["dhr"],description = "Remove certain amount to someone dank hunt profile.",help = "dankhuntremove <count> <member>")
-    @mod_role_check()
-    async def dankhuntremove(self,ctx,count:int,member:discord.Member):
-        if count <= 0:
-            return await ctx.reply("How you planning to remove negative entries you big brain.")
-        ref = db.reference("/",app = firebase_admin._apps['lottery'])
-
-        current = ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).get() or 0
-
-        ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).set(int(current) - count)
-
-        embed = discord.Embed(title = f"Entries Removed!",description = f"Removed `{count}` entries for {member}. They now have `{int(current) - count}` total entries in this dank hunt!", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.now()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
-        await ctx.reply(embed = embed)
-
-    @commands.command(aliases = ["dhv"],description = "View yours or another member dank hunt current count.",help = "dankhuntview [member]")
-    async def dankhuntview(self,ctx,member:discord.Member = None):
-        member = member or ctx.author
-
-        ref = db.reference("/",app = firebase_admin._apps['lottery'])
-
-        current = ref.child(str(ctx.guild.id)).child("dankhunt").child(str(member.id)).get() or 0
-
-        embed = discord.Embed(description = f"{member} dank hunt count: `{current}`", color = discord.Color.random())
-        embed.timestamp = datetime.datetime.now()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
-        await ctx.reply(embed = embed)
-
-    @commands.command(aliases = ["dhlb"],description = "View the top 10 on dank hunt leaderboard.",help = "dankhuntleaderboard")
-    async def dankhuntleaderboard(self,ctx):
-        ref = db.reference("/",app = firebase_admin._apps['lottery'])
-        log = ref.child(str(ctx.message.guild.id)).child("dankhunt").get()
-
-        if log:
-            users,log =  sorted(log, key=log.get, reverse=True) , log
+    @commands.command(help ="Unlock the view of a specified channel for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to true/green in a channel.")
+    @commands.has_role(825824551920467968)
+    async def eviewunlock(self,ctx, role : discord.Role = "all"):
+        channel = ctx.channel
+        if channel.id == 820538118360662037 or channel.id == 847886025006907482 or channel.id == 820538471977844757:
+            if role == "all":
+                role = ctx.guild.default_role
+            overwrite = channel.overwrites_for(role)
+            if overwrite.view_channel == True:
+                return await ctx.send(embed = discord.Embed(description = f"Channel {channel.mention} is already viewunlocked for {role.mention}!",color = discord.Color.red()))
+            overwrite.view_channel = True
+            await channel.set_permissions(role, overwrite=overwrite)
+            embed=discord.Embed(description=f"🔓 Channel {channel.mention} viewunocked for {role.mention}",color = discord.Color.red())
+            embed.set_footer(text = "Run [prefix]viewlock [role] [channel] to lock it again!")
+            await ctx.reply(embed = embed)
         else:
-            users,log = {},{}
-
-        build = ""
-        count = 1
-        for user in users:
-            amount = log[user]
-            build += f"{count}. <@{user}>: `{amount}` finds\n"
-            count += 1
-
-            if count >= 11:
-                break
-
-        embed = discord.Embed(title = f"Leaderboard for {ctx.guild.name} dank hunt",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.now()
-        embed.set_footer(text = f'{ctx.guild.name} Dank Hunt',icon_url = ctx.message.channel.guild.icon)
-
-        await ctx.reply(embed = embed)
-
+            await ctx.send("You can't use that command here!")
     
-    @commands.command(description = "Add something to leaderboard",help = "lloga <user> <event>")
+    @commands.command(help = "Add a win for someone to leaderboard")
     @eman_role_check()
     async def lloga(self,ctx,member:discord.Member,*,event):
         event = event.lower()
@@ -185,7 +123,7 @@ class DankCafe(commands.Cog):
 
         await ctx.reply(embed = embed)
 
-    @commands.command(description = "Remove something from leaderboard",help = "llogr <user> <event>")
+    @commands.command(help = "Remove a win for someone from leaderboard")
     @eman_role_check()
     async def llogr(self,ctx,member:discord.Member,*,event):
         event = event.lower()
@@ -205,7 +143,7 @@ class DankCafe(commands.Cog):
 
         await ctx.reply(embed = embed)
 
-    @commands.command(description = "Set someone log amount",help = "llogs <user> <event> <amount>")
+    @commands.command(help = "Set someone's win log amount")
     @eman_role_check()
     async def llogs(self,ctx,member:discord.Member,event,amount:int):
         event = event.lower()
@@ -221,8 +159,7 @@ class DankCafe(commands.Cog):
         embed = discord.Embed(title = f"Wins Set!",description = f"Set win entries for {member} in {event}. They now have `{amount}` wins logged for this event!", color = discord.Color.random())
         await ctx.reply(embed = embed)
 
-
-    @commands.command(description = "Show event leaderboard for both event, mod only.",help = "llogl")
+    @commands.command(help = "Show event leaderboard for both events, mod only.")
     @eman_role_check()
     async def llogl(self,ctx):
         ref = db.reference("/",app = firebase_admin._apps['elead'])
@@ -281,7 +218,6 @@ class DankCafe(commands.Cog):
         page += 1
         count = 1
         build = ""
-
 
         await ctx.message.delete()
 

@@ -5,11 +5,12 @@ from enum import Enum
 from musicbot import config
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+import sensitive
 
 
 try:
     sp_api = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-        client_id=config.SPOTIFY_ID, client_secret=config.SPOTIFY_SECRET))
+        client_id=sensitive.SPOTIFY_ID, client_secret=sensitive.SPOTIFY_SECRET))
     api = True
 except:
     api = False
