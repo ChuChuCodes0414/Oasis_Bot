@@ -7,7 +7,7 @@ from itertools import starmap, chain
 from discord.ext import commands, menus
 from discord import ui
 
-class EventLogging(commands.Cog):
+class EventTracking(commands.Cog):
     """
         This category allows you to track event manager activity. Most commands will require you to set up a role for event managers. You can also setup a channel to log when event is completed.
         \n**Setup for this Category**
@@ -180,7 +180,7 @@ class EventLogging(commands.Cog):
     @eman_role_check()
     async def eleaderboard(self,ctx):
         users,log = await self.get_leaderboard(ctx)
-        formatter = HelpPageSource(users, log)
+        formatter = EventPageSource(users, log)
         menu = MyMenuPages(formatter, delete_message_after=True)
         await menu.start(ctx)
 
@@ -234,6 +234,11 @@ class MyMenuPages(ui.View, menus.MenuPages):
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
         return await message.reply(**kwargs)
+    
+    async def on_timeout(self):
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
 
     async def interaction_check(self, interaction):
         """Only allow the author that invoke the command to be able to use the interaction"""
@@ -258,10 +263,11 @@ class MyMenuPages(ui.View, menus.MenuPages):
     @ui.button(label='End Interaction', style=discord.ButtonStyle.blurple)
     async def stop_page(self, button, interaction):
         self.stop()
-        if self.delete_message_after:
-            await self.message.edit(view = None)
-
-class HelpPageSource(menus.ListPageSource):
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
+    
+class EventPageSource(menus.ListPageSource):
     def __init__(self, data, log):
         super().__init__(data, per_page=10)
         self.log = log
@@ -282,4 +288,4 @@ class HelpPageSource(menus.ListPageSource):
         return embed
 
 def setup(client):
-    client.add_cog(EventLogging(client))
+    client.add_cog(EventTracking(client))

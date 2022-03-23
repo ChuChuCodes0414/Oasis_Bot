@@ -13,12 +13,11 @@ import asyncio
 from discord.embeds import EmptyEmbed
 import time
 import asyncpg
-#from discord_components import DiscordComponents, ComponentsBot, Button
+from discord_components import DiscordComponents, ComponentsBot, Button
 
 beta = True
 
 firebase_admin.initialize_app()
-
 
 cred_obj_eleaderboard = sensitive.CRED_OBJECT_ELEADERBOARD
 eleaderboard_app = firebase_admin.initialize_app(cred_obj_eleaderboard , {
@@ -80,9 +79,8 @@ def get_prefix(client,message):
 intents = discord.Intents.default()
 intents.members = True
 client = discord.ext.commands.Bot(command_prefix = get_prefix, intents = intents)
-#DiscordComponents(client)
+DiscordComponents(client)
 
-#client.remove_command('help')
 
 if not beta:
     status = cycle(['with your feelings','o!help | @Oasis Bot setup'])
@@ -101,16 +99,8 @@ async def on_ready():
 @client.event
 async def on_guild_join(guild):
     ref = db.reference("/",app = firebase_admin._apps['settings'])
-    
-    serverconf = {'dj': None, 'event': None, 'giveaway': None, 'mod': [None], 'modtrack': [None], 'pchannels': [None], 'prefix': 'o!'}
-
+    serverconf = {'prefix': 'o!'}
     ref.child(str(guild.id)).set(serverconf)
-
-@client.event
-async def on_guild_remove(guild):
-    ref = db.reference("/",app = firebase_admin._apps['settings'])
-
-    ref.child(str(guild.id)).delete()
 
 # status looping
 @tasks.loop(seconds=10)
@@ -268,13 +258,13 @@ client._BotBase__cogs  = commands.core._CaseInsensitiveDict()
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
-'''
 if beta:
     for filename in os.listdir('./betacogs'):
         if filename.endswith('.py'):
             client.load_extension(f'betacogs.{filename[:-3]}')
+'''
 
-#client.load_extension(f'testingtrades.testingevent')
+client.load_extension(f'testingtrades.testingevent')
 client.load_extension("jishaku")
 
 #POSTGRES_INFO = {"dsn":"postgres://postgres:ChuisCool0414$@localhost:5432/postgres"}

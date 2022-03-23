@@ -11,7 +11,7 @@ class MyHelp(commands.HelpCommand):
         message = self.get_destination()
         embed = discord.Embed(title = "Oasis Bot Help",description = f"Categories Listed Below | `{len(list(chain.from_iterable(mapping.values())))}` Commands Loaded",color = discord.Color.random())
         for cog, commands in mapping.items():
-            if cog and cog.qualified_name not in ['BetaReload','Jishaku','LoggingError','HelpCommand']:
+            if cog and cog.qualified_name not in ['Dev','Jishaku','LoggingError','HelpCommand']:
                 embed.add_field(name = cog.qualified_name,value = cog.short + "\n" + f"`{len(commands)} Commands`")
         embed.set_footer(text = "Use [prefix]help <category> to see the commands in the category.")
         await message.reply(embed = embed)
@@ -32,7 +32,13 @@ class MyHelp(commands.HelpCommand):
         await message.reply(embed = embed)
 
     async def send_group_help(self, group):
-        return await super().send_group_help(group)
+        message = self.get_destination()
+        embed = discord.Embed(title = f"Group Command: {group.name}",description = group.help,color = discord.Color.random())
+        build = ""
+        for command in group.commands:
+            build += command.name + "\n"
+        embed.add_field(name = "Subcommands",value = f"`{build}`")
+        await message.reply(embed = embed)
 
     async def send_error_message(self, error):
         embed = discord.Embed(title="Error", description=error)
@@ -68,6 +74,11 @@ class MyMenuPages(ui.View, menus.MenuPages):
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
         return await message.reply(**kwargs)
+    
+    async def on_timeout(self):
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
 
     async def interaction_check(self, interaction):
         """Only allow the author that invoke the command to be able to use the interaction"""
@@ -92,16 +103,19 @@ class MyMenuPages(ui.View, menus.MenuPages):
     @ui.button(label='End Interaction', style=discord.ButtonStyle.blurple)
     async def stop_page(self, button, interaction):
         self.stop()
-        if self.delete_message_after:
-            await self.message.edit(view = None)
-
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
 
 class HelpPageSource(menus.ListPageSource):
     def __init__(self, data, helpcommand,cogname):
         super().__init__(data, per_page=6)
         self.helpcommand = helpcommand
         self.cogname = cogname
+
     def format_command_help(self, no, command):
+        if command.hidden == True:
+            return ""
         name = command.name
         docs = self.helpcommand.get_command_brief(command)
         return f"**{no}. {name}**\n{docs}"
@@ -110,6 +124,9 @@ class HelpPageSource(menus.ListPageSource):
         page = menu.current_page
         max_page = self.get_max_pages()
         starting_number = page * self.per_page + 1
+        for entry in entries:
+            if entry.hidden == True:
+                entries.remove(entry)
         iterator = starmap(self.format_command_help, enumerate(entries, start=starting_number))
         page_content = "\n".join(iterator)
         embed = discord.Embed(

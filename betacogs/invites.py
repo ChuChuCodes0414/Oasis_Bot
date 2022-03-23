@@ -16,6 +16,7 @@ class Invites(commands.Cog):
         Invite Log: `o!settings set invitelog <channel>` 
     '''
     def __init__(self, client):
+        self.short = "<:invite:950957804544471080> | Invite Tracking"
         self.client = client
         self.tracker = InviteTracker(client)
 
@@ -216,7 +217,7 @@ class Invites(commands.Cog):
         await self.tracker.cache_invites()
         await ctx.reply("Cached Invites")
 
-    @commands.command(description = "How many invites do you have? And who invited you?",help = "invites [member]")
+    @commands.command(help = "How many invites do you have? And who invited you?")
     async def invites(self,ctx,member:discord.Member = None):
         ref = db.reference("/",app = firebase_admin._apps['invites'])
 
@@ -256,8 +257,6 @@ class Invites(commands.Cog):
         emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await ctx.send(embed = emb)
-        
-
         
 def setup(client):
     client.add_cog(Invites(client))
@@ -341,7 +340,7 @@ class InviteTracker():
             pass
         for new_invite in await member.guild.invites():
             for cached_invite in self._cache[member.guild.id].values():
-                if new_invite.code == cached_invite.code and new_invite.uses - cached_invite.uses == 1 or cached_invite.revoked:
+                if new_invite.code == cached_invite.code and new_invite.uses > cached_invite.uses or cached_invite.revoked:
                     if cached_invite.revoked:
                         self._cache[member.guild.id].pop(cached_invite.code)
                     elif new_invite.inviter == cached_invite.inviter:

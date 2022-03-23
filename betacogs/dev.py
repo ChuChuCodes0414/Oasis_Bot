@@ -68,8 +68,8 @@ class Dev(commands.Cog):
     @commands.command(name = "reload",hidden=True)
     @commands.is_owner()
     async def reload(self,ctx,extention):
-        self.client.unload_extension(f'cogs.{extention}')
-        self.client.load_extension(f'cogs.{extention}')
+        self.client.unload_extension(f'betacogs.{extention}')
+        self.client.load_extension(f'betacogs.{extention}')
         await ctx.reply(f'Reloaded {extention} sucessfully')
     @reload.error
     async def reload_error(self,ctx, error):
@@ -79,7 +79,7 @@ class Dev(commands.Cog):
     @commands.command(name = "load",hidden=True)
     @commands.is_owner()
     async def load(self,ctx,extention):
-        self.client.load_extension(f'cogs.{extention}')
+        self.client.load_extension(f'betacogs.{extention}')
         await ctx.reply(f'Loaded {extention} sucessfully')
     @load.error
     async def load_error(self,ctx, error):
@@ -88,7 +88,7 @@ class Dev(commands.Cog):
     @commands.command(name = "unload",hidden=True)
     @commands.is_owner()
     async def unload(self,ctx,extention):
-        self.client.unload_extension(f'cogs.{extention}')
+        self.client.unload_extension(f'betacogs.{extention}')
         await ctx.reply(f'Unloaded {extention} sucessfully')
     @unload.error
     async def unload_error(self,ctx, error):

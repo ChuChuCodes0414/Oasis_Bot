@@ -28,6 +28,7 @@ class Music(commands.Cog):
         for guild in self.bot.guilds:
             await self.register(guild)
             #print("Joined {}".format(guild.name))
+        print("Music Cog Loaded.")
 
     @commands.Cog.listener()
     async def on_guild_join(self,guild):
@@ -223,8 +224,8 @@ class Music(commands.Cog):
         if config.MAX_SONG_PRELOAD > 25:
             config.MAX_SONG_PRELOAD = 25
 
-        embed = discord.Embed(title=":scroll: Queue [{}]".format(
-            len(playlist.playque)), color=config.EMBED_COLOR, inline=False)
+        embed = discord.Embed(title = ":scroll: Queue [{}]".format(
+            len(playlist.playque)), color=config.EMBED_COLOR)
         description = ""
         for counter, song in enumerate(list(playlist.playque)[:config.MAX_SONG_PRELOAD], start=1):
             if song.info.title is None:

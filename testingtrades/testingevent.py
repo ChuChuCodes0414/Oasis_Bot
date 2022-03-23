@@ -1,4 +1,3 @@
-from tkinter import NONE
 import discord
 from discord.ext import commands
 import asyncio
@@ -7,13 +6,14 @@ from discord import channel
 import discord_components
 from discord_components import Button
 import requests
-import fontstyle
 import ast
 import html
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import textwrap
+import math
+import datetime
 #db organised as:
 #DANKTRADES
 #inventories , stock , settings
@@ -43,7 +43,7 @@ class HelpRewrite(commands.Cog):
     
     async def process_sentence(self,sentence):
         wrapped_text = textwrap.wrap(sentence, width=35)
-        height, width = len(wrapped_text) * 32 + 50, 590
+        height, width = len(wrapped_text) * 32 + 50, 600
         transparent_img = np.zeros((height, width, 4), dtype=np.uint8)
         x,y= 20,50
         for i, line in enumerate(wrapped_text):
@@ -147,18 +147,58 @@ class HelpRewrite(commands.Cog):
                     return True
                 else:
                     return False
-            
-            while True:
-                try:
-                    message = await self.client.wait_for("message",timeout = 45.0,check = check)
-                except asyncio.TimeoutError:
-                    return await message.edit("The drop timed out. Are yall dead?")
 
-                else:
-                    break
+            try:
+                message = await self.client.wait_for("message",timeout = 45.0,check = check)
+            except asyncio.TimeoutError:
+                return await message.edit("The drop timed out. Are yall dead?")
+
             item = await self.give_item(message.author.id,rarity)
             embed = discord.Embed(description = f"**{message.author}** has claimed `{item}`!",color = discord.Color.green())
             await message.reply(embed = embed,mention_author = False)
+        elif type == "math":
+            type2 = random.randint(0,3)
+            if rarity == "normal":
+                num1,num2 = random.randint(0,10),random.randint(0,10)
+            elif rarity == "rare":
+                num1,num2 = random.randint(10,100),random.randint(10,100)
+            elif rarity == "legendary":
+                num1,num2 = random.randint(100,1000),random.randint(100,1000)
+            
+            if type2 == 0:
+                result = num1 + num2
+                display = f"{num1} + {num2} = ?"
+            elif type2 == 1:
+                result = num1 - num2
+                display = f"{num1} - {num2} = ?"
+            elif type2 == 2:
+                result = num1 + num2
+                display = f"{num1} x {num2} = ?"
+            elif type2 == 3:
+                if num1 >= num2:
+                    result = num1 // num2
+                    display = f"{num1} / {num2} = ?\nDrop the decimals and answer with an integer."
+                else:
+                    result = num2 // num1
+                    display = f"{num2} / {num1} = ?\nDrop the decimals and answer with an integer."
+            embed = discord.Embed(title = f"{rarity.capitalize()} Event Spawn!",description = f"Solve this problem to pick it up!\n\n{display}",color = discord.Color.random())
+            message = await message.channel.send(embed = embed)
+
+            def check(i):
+                if i.channel.id == message.channel.id and i.content.lower() == str(result):
+                    return True
+                else:
+                    return False
+
+            try:
+                message = await self.client.wait_for("message",timeout = 45.0,check = check)
+            except asyncio.TimeoutError:
+                return await message.edit("The drop timed out. Are yall dead?")
+
+            item = await self.give_item(message.author.id,rarity)
+            embed = discord.Embed(description = f"**{message.author}** has claimed `{item}`!",color = discord.Color.green())
+            await message.reply(embed = embed,mention_author = False)
+
         elif type == "trivia":
             if rarity == "normal":
                 response = requests.get("https://opentdb.com/api.php?amount=1&difficulty=easy")
@@ -250,15 +290,89 @@ class HelpRewrite(commands.Cog):
                     embed = discord.Embed(description = f"**{interaction.user}** has claimed `{item}`!\nThe answer was **{correct}**",color = discord.Color.green())
                     return await interaction.respond(embed = embed,ephemeral = False)
 
+    
+    
     @commands.command()
+    @commands.has_guild_permissions(administrator = True)
     async def spawn(self,ctx,event:str = None):
         await ctx.send("spawning")
         await self.spawn_event(ctx.message,"normal",event)
 
+    async def get_embed(self,testdict,page,per):
+        start = (page-1) * per
+        end = min(len(testdict)+1,start + per)
+        res = ""
+        for name in list(testdict.keys())[start:end]:
+            amount = testdict[name]
+            res += f"**{name}** : {amount}\n"
+        return res
+
     @commands.command()
-    async def debug(self,ctx):
-        embed = discord.Embed(tite = "Stored data for this channel",description = self.tracking.get(ctx.channel.id,None))
-        await ctx.send(embed = embed)
+    @commands.has_guild_permissions(administrator = True)
+    async def test(self,ctx):
+        testdict = {"pepet":69,"pepec":69,"pepe":69,"coins":6969696,"pepem":10,"blob":10,"adv":100,"pepecrown":1}
+        page,perpage= 1,5
+        maxpage = math.ceil(len(testdict)/perpage)
+        buttons = [[Button(label = "Back",style = 1),Button(label = "Forward",style = 1)]]
+
+        if page == maxpage: buttons[0][1].disabled = True
+        else: buttons[0][1].disabled = False
+        if page == 1:buttons[0][0].disabled = True
+        else: buttons[0][0].disabled = False
+
+        res = await self.get_embed(testdict,page,perpage)
+        embed = discord.Embed(title = f"Inventory Items for {ctx.author}",description = res,color=discord.Color.blurple())
+        embed.timestamp = datetime.datetime.now()
+        embed.set_thumbnail(url=ctx.author.avatar_url)
+        embed.set_footer(text = f"{page}/{maxpage}")
+        message = await ctx.send(embed = embed, components = buttons)
+
+        def Check(i):
+            if i.message.id == message.id:
+                if (i.component.label.startswith("Forward") or i.component.label.startswith("Back")):
+                    return True
+                else:
+                    return False
+            else:
+                return False
+
+        while True:
+            buttons = [[Button(label = "Back",style = 1),Button(label = "Forward",style = 1)]]
+
+            if page  == maxpage: buttons[0][1].disabled = True
+            else: buttons[0][1].disabled = False
+            if page == 1: buttons[0][0].disabled = True
+            else: buttons[0][0].disabled = False
+            res = await self.get_embed(testdict,page,perpage)
+
+            embed = discord.Embed(title = f"Inventory Items for {ctx.author}",description = res,color=discord.Color.blurple())
+            embed.timestamp = datetime.datetime.now()
+            embed.set_thumbnail(url=ctx.author.avatar_url)
+            embed.set_footer(text = f"{page}/{maxpage}")
+            await message.edit(embed = embed,components = buttons)
+            try:
+                interaction = await self.client.wait_for("button_click", timeout = 60.0,check = Check)
+            except asyncio.TimeoutError:
+                try:
+                    await message.edit("Message no longer Active",embed = embed,components = [
+                        [
+                            Button(label = "Back",disabled = True,style = 1),
+                            Button(label = "Forward",disabled = True,style = 1)
+                        ]
+                    ])
+                    break
+                except:
+                    break
+            if not interaction.user.id == ctx.message.author.id:
+                embed1=discord.Embed(description=f"Only {ctx.message.author.mention} can use these buttons!", color=discord.Color.red())
+                await interaction.respond(embed = embed1)
+                continue
+            await interaction.respond(type = 6)
+            if interaction.component.label == "Forward":
+                page += 1
+            else:
+                page -= 1
+
     
 def setup(client):
     client.add_cog(HelpRewrite(client))
