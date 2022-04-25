@@ -1,5 +1,4 @@
 import discord
-from discord.embeds import EmptyEmbed
 from discord.ext import commands
 import datetime
 import firebase_admin
