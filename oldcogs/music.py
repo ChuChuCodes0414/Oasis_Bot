@@ -10,7 +10,6 @@ from async_timeout import timeout
 from discord.ext import commands
 import firebase_admin
 from firebase_admin import db
-from discord_components import DiscordComponents, Button
 
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: ''

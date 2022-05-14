@@ -1,12 +1,12 @@
+import re
 import discord
 from discord.ext import commands
-
 import firebase_admin
 from firebase_admin import db
 import datetime
-from datetime import datetime
 import math
 import asyncio
+from utils import timing
 
 class Mod(commands.Cog):
     """
@@ -16,161 +16,175 @@ class Mod(commands.Cog):
     """
     def __init__(self,client):
         self.client = client
+        self.short = "<:bantime:930623021180387328> | Mod commands!"
 
     @commands.Cog.listener()
     async def on_ready(self):
         print('Mod Cog Loaded.')
 
-    def mod_role_check():
-        async def predicate(ctx):
-            if ctx.author.guild_permissions.administrator:
-                return True
-            ref = db.reference("/",app = firebase_admin._apps['settings'])
-            modroles = ref.child(str(ctx.message.guild.id)).child('mod').get()
-
-            if modroles == None:
-                return False
-            for role in modroles:
-                role_ob = ctx.message.guild.get_role(role)
-                if role_ob in ctx.message.author.roles:
-                    return True
-            else:
-                return False
-        return commands.check(predicate)
-    
-    async def pull_data(self,guild,member):
-        ref = db.reference("/",app = firebase_admin._apps['modlogs'])
-        modlogs = ref.child(str(guild)).child(str(member)).get()
-
-        return modlogs
-
-    async def set_data(self,guild,member,action,reason,mod):
-        ref = db.reference("/",app = firebase_admin._apps['modlogs'])
-        modlogs = ref.child(str(guild)).child(str(member)).get()
-
-        if modlogs == None:
-            modlogs = []
-
-        now = datetime.now()
-        formatnow = str(now.month) + "-" + str(now.day) + "-" + str(now.year) + " " + str(now.hour) + ":" + str(now.minute)
-
-        modlogs.append([action,formatnow,reason,mod])
-
-        ref.child(str(guild)).child(str(member)).set(modlogs)
-    
-
     @commands.Cog.listener()
     async def on_member_join(self,member):
         if member.guild.id == 798822518571925575:
             date = member.created_at
-            now = datetime.now()
+            now = datetime.datetime.now(datetime.timezone.utc)
             diff = now - date
 
-            if diff.days < 30:
+            if diff.days < 30 and diff.days > 3:
                 embed=discord.Embed(title=f"⚠ Alert For {member}",description=f"`There is an account under 30 days old!`", color=discord.Color.red())
                 embed.set_thumbnail(url = member.avatar_url)
                 embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
                 embed.add_field(name = "Account Created On",value= f'{date}',inline = True)
-                embed.timestamp = datetime.utcnow()
-                embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon_url)
+                embed.timestamp = datetime.now()
+                embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon)
                 channel = self.client.get_channel(825882336594886687)
                 await channel.send(embed=embed)\
 
-
-    @commands.command(description = "Change a member's nickname.",help = "setnick <member> <nickname>")
+    @commands.command(help = "Change a member's nickname.")
     @commands.has_permissions(manage_nicknames = True) 
-    async def setnick(self,ctx, member,*,nickname = None):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
+    async def setnick(self,ctx, member:discord.Member,*,nickname = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply("You cannot change the nickname of people who have a higher role than you.")
+            await ctx.reply(embed = discord.Embed(description = "You cannot change the nickname of people who have a higher or euqal role as you.",color = discord.Color.red()))
         elif bot_top_ob <= member.top_role:
-            await ctx.reply("Does not seem like I can change that person's nickname, since their top role is higher than my top role.")
+            await ctx.reply(embed = discord.Embed(description = "Does not seem like I can change that person's nickname, since their top role is higher than my top role.",color = discord.Color.red()))
         else:
             await member.edit(nick=nickname)
-            await ctx.reply("Edited member's nickname.")
+            await ctx.reply(embed = discord.Embed(description = f"Edited {member}'s nickname to: `{nickname}`",color = discord.Color.green()))
 
-    @commands.command(description = "Give/remove a role to someone else.",help = "role <member> <role>")
+    @commands.command(help = "Give/remove a role to someone else.")
     @commands.has_permissions(manage_roles = True) 
     async def role(self,ctx, member:discord.Member,role:discord.Role):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
         if role >= bot_top_ob:
-            return await ctx.reply(f"That role position ({role.position}) is higher or equal to my top role ({bot_top_ob.position}). Try changing my role position to something higher than the role you want to add.")
+            return await ctx.reply(embed = discord.Embed(description = f"That role position `({role.position})` is higher or equal to my top role `({bot_top_ob.position})`. Try changing my role position to something higher than the role you want to add.",color = discord.Color.red()))
         elif ctx.author.top_role <= role:
-            return await ctx.reply(f"That role position ({role.position}) is higher or equal to your top role ({ctx.author.top_role.position}). Ain't letting you exploit today.")
+            return await ctx.reply(embed = discord.Embed(description = f"That role position `({role.position})` is higher or equal to your top role `({ctx.author.top_role.position})`. Ain't letting you exploit today.",color = discord.Color.red()))
 
         if role in member.roles:
             await member.remove_roles((role))
-            await ctx.send(f"Removed **{role.name}** from **{member}**")
+            await ctx.reply(embed = discord.Embed(description = f"Removed **{role.name}** from **{member}**",color = discord.Color.green()))
         else:
             await member.add_roles((role))
-            await ctx.send(f"Added **{role.name}** to **{member}**")
-
-    @commands.command(aliases = ['k'],description = "Kick a member from the server.",help = "kick <member>")
-    @commands.has_permissions(kick_members = True) 
-    async def kick(self,ctx, member,*,reason = None):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-        
-        if not member:
-            return await ctx.reply("Hey, does not seem like that person is in the server.")
-
+            await ctx.reply(embed = discord.Embed(description = f"Added **{role.name}** to **{member}**",color = discord.Color.green()))
+    
+    @commands.command(aliases = ['to'],help = "Timeout a user through the timeout function")
+    @commands.has_permissions(moderate_members = True)
+    async def timeout(self,ctx,member:discord.Member,duration,*,reason = None):
+        bot_top = ctx.guild.get_member(self.client.user.id)
+        bot_top_ob = bot_top.top_role
+        if bot_top_ob <= member.top_role:
+            return await ctx.reply(embed = discord.Embed(description = f"That member has a role position `({member.top_role.position})` that is higher or equal to my top role `({bot_top_ob.position})`.",color = discord.Color.red()))
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply("You cannot kick people who have a higher role than you.")
+            return await ctx.reply(embed = discord.Embed(description = "You cannot timeout people who have a higher role than you.",color = discord.Color.red()))
+        success = True
+        c = ""
+        hours = 0
+        seconds = 0
+        for letter in duration:
+            if letter.isalpha():
+                letter = letter.lower()
+                try: c = int(c) 
+                except: 
+                    success = False  
+                    break
+                if letter == 'w': hours += c*168 
+                elif letter == 'd': hours += c*24
+                elif letter == 'h': hours += c
+                elif letter == 'm': seconds += c*60
+                elif letter == 's': seconds += c
+                else: 
+                    success = False
+                    break
+                c = ""
+            else:
+                c += letter
+        if c != "" or not success:
+            return await ctx.reply(embed = discord.Embed(description = f'I could not parse your timing input!\n\nValid Time Inputs:\n`w` - weeks\n`d` - days\n`h` - hours\n`m` - minutes\n`s` - seconds\n\nExamples: `2w`, `2h30m`, `10s`',color = discord.Color.red()))
+        added = datetime.timedelta(hours = hours,seconds = seconds)
+        if added.days >= 28:
+            return await ctx.reply(embed = discord.Embed(description = f"You cannot timeout a member for more than `4 weeks`!",color = discord.Color.red()))
+        until = discord.utils.utcnow() + added
+        await member.edit(timed_out_until = until,reason = reason)
+        unix = int(until.replace(tzinfo=datetime.timezone.utc).timestamp())
+        await ctx.reply(embed = discord.Embed(description = f"Timed out **{member}** until <t:{unix}:f> (<t:{unix}:R>)",color = discord.Color.green()))
+
+    @commands.command(aliases = ['uto'])
+    @commands.has_permissions(moderate_members = True)
+    async def untimeout(self,ctx,member:discord.Member,*,reason = None):
+        bot_top = ctx.guild.get_member(self.client.user.id)
+        bot_top_ob = bot_top.top_role
+        if bot_top_ob <= member.top_role:
+            return await ctx.reply(embed = discord.Embed(description = f"That member has a role position `({member.top_role.position})` that is higher or equal to my top role `({bot_top_ob.position})`.",color = discord.Color.red()))
+        if member.top_role >= ctx.author.top_role:
+           return await ctx.reply(embed = discord.Embed(description = "You cannot manage timeout for people who have a higher role than you.",color = discord.Color.red()))
+        await member.edit(timed_out_until = None,reason = reason)
+        await ctx.reply(embed = discord.Embed(description = f"Removed timeout from **{member}**",color = discord.Color.green()))
+    
+    @commands.command(aliases = ['k'],help = "Kick a member from the server.")
+    @commands.has_permissions(kick_members = True) 
+    async def kick(self,ctx, member:discord.Member,*,reason = None):
+        bot_top = ctx.guild.get_member(self.client.user.id)
+        bot_top_ob = bot_top.top_role
+        if bot_top_ob <= member.top_role:
+            return await ctx.reply(embed = discord.Embed(description = f"That member has a role position `({member.top_role.position})` that is higher or equal to my top role `({bot_top_ob.position})`.",color = discord.Color.red()))
+        if member.top_role >= ctx.author.top_role:
+            await ctx.reply(embed = discord.Embed(description = "You cannot kick people who have a higher role than you.",color = discord.Color.red()))
         else:
+            res = ""
             try:
                 dm = member.dm_channel
                 if dm == None:
                     dm = await member.create_dm()
-                await dm.send(f'You were kicked from {guild} for the following reason:\n{reason}')
+                await dm.send(f'**You were kicked from {ctx.guild} for the following reason:**\n{reason}')
+                res += "Member DMed? <:greentick:930931553478008865>"
             except:
-                pass
-            await self.set_data(guild.id, member.id, 'Kick', reason, str(ctx.message.author))
+                res += "Member DMed? <:redtick:930931511685955604>"
             await member.kick(reason=reason)
-            await ctx.reply(f'**{member}** was kicked out of the server.')
+            embed = discord.Embed(description = f"**{member}** was kicked from the server\n{res}",color = discord.Color.green())
+            await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['b'],description = "Ban a member from the server",help = "ban <member>")
+    @commands.command(aliases = ['b'],help = "Ban a member from the server")
     @commands.has_permissions(ban_members = True) 
     async def ban(self,ctx,member, *,reason = None):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            id = int(member)
-            member = guild.get_member(int(member))
-        else:
+        try:
             member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        if not member:
-            user = await self.client.fetch_user(int(id))
-            await ctx.guild.ban(user,reason = reason,delete_message_days=0)
-            return await ctx.reply(f'**{user.name}#{user.discriminator}** was banned from the server.')
-
+            failed = False
+        except:
+            failed = True
+            member = member
+        if failed:
+            try:
+                user = await self.client.fetch_user(int(member))
+            except:
+                return await ctx.reply(embed = discord.Embed(description = "I could not find a user with that id! Try again with an actual id.",color = discord.Color.red()))
+            if user:
+                await ctx.guild.ban(user,reason = reason,delete_message_days=0)
+                return await ctx.reply(embed = discord.Embed(description = f'**{user.name}#{user.discriminator}** was banned from the server.\nMember Originally in Server? <:redtick:930931511685955604>',color = discord.Color.green()))
+        bot_top = ctx.guild.get_member(self.client.user.id)
+        bot_top_ob = bot_top.top_role
+        if bot_top_ob <= member.top_role:
+            return await ctx.reply(embed = discord.Embed(description = f"That member has a role position `({member.top_role.position})` that is higher or equal to my top role `({bot_top_ob.position})`.",color = discord.Color.red()))
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply("You cannot ban people who have a higher role than you.")
+            await ctx.reply(embed = discord.Embed(description = "You cannot ban people who have a higher role than you.",color = discord.Color.red()))
         else:
+            res = ""
             try:
                 dm = member.dm_channel
                 if dm == None:
                     dm = await member.create_dm()
-                await dm.send(f'You were banned from {guild} for the following reason:\n{reason}')
+                await dm.send(f'**You were banned from {ctx.guild} for the following reason:**\n{reason}')
+                res += "Member DMed? <:greentick:930931553478008865>"
             except:
-                pass
-            await self.set_data(guild.id, member.id, 'Ban', reason, str(ctx.message.author))
-            await member.ban(reason=reason)
-            await ctx.reply(f'**{member}** was banned from the server.')
+                res += "Member DMed? <:redtick:930931511685955604>"
+            await member.ban(reason=reason,delete_message_days=0)
+            embed = discord.Embed(description = f"**{member}** was banned from the server\n{res}",color = discord.Color.green())
+            await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['mb'],description = "Mass ban members from the server",help = "massban <members>")
+    @commands.command(aliases = ['mb'],help = "Mass ban members from the server")
     @commands.has_permissions(ban_members = True) 
-    async def massban(self,ctx,*,members,):
+    async def massban(self,ctx,*,members):
         guild = ctx.guild
         members = members.split()
         count = 0
@@ -185,97 +199,28 @@ class Mod(commands.Cog):
                 if not member:
                     user = await self.client.fetch_user(int(id))
                     await ctx.guild.ban(user,reason = f"Massban Taken by **{ctx.author}**",delete_message_days=0)
-                    await self.set_data(guild.id, user.id, 'Ban', f"Massban Taken by **{ctx.author}**", str(ctx.message.author))
                     count += 1
                 else:
                     if member.top_role >= ctx.author.top_role:
                         continue
                     await member.ban(reason=f"Massban Taken by **{ctx.author}**",delete_message_days=0)
-                    await self.set_data(guild.id, member.id, 'Ban', f"Massban Taken by **{ctx.author}**", str(ctx.message.author))
                     count += 1
             await asyncio.sleep(1)
 
         try:
-            await ctx.reply(f"Banned **{count}** members")
+            await ctx.reply(embed = discord.Embed(description = f"Banned **{count}** members",color = discord.Color.green()))
         except:
-            await ctx.send(f"Banned **{count}** members")
+            await ctx.send(embed = discord.Embed(description = f"Banned **{count}** members",color = discord.Color.green()))
 
-    @commands.command(description = "Unban a member from the server.",help = "unban <member>")
+    @commands.command(help = "Unban a member from the server.")
     @commands.has_permissions(ban_members = True) 
-    async def unban(self,ctx,member,*,reason=None):
-        banned_users = await ctx.guild.bans()
-        member = int(member)
-
-        for ban_entry in banned_users:
-            user = ban_entry.user
-
-            if (user.id == member):
-                await ctx.guild.unban(user,reason = reason)
-                await self.set_data(ctx.guild.id, user.id, 'Unban', reason, str(ctx.message.author))
-                await ctx.reply(f'Unbanned **{user.name}#{user.discriminator}** for {reason}')
-                return
-        await ctx.reply("I cannot find this person on the bans list!")
-
-    @commands.command(description = "Warn a member.",help = "warn <member> <reason>")
-    @mod_role_check()
-    async def warn(self,ctx,member,*, reason):
-        guild = ctx.guild
-        if str(member).isnumeric():
-            member = guild.get_member(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-        await self.set_data(guild.id, member.id, 'Warn', reason, str(ctx.message.author))
-
-        await ctx.reply(f'Warned **{member}** for {reason}')
+    async def unban(self,ctx,user:discord.User,*,reason=None):
+        try:
+            await ctx.guild.unban(user,reason = reason)
+            await ctx.reply(embed = discord.Embed(description = f"Unbanned **{user}**",color = discord.Color.green()))
+        except:
+            return await ctx.reply(embed = discord.Embed(description = "That user is not currently banned.",color = discord.Color.red()))
 
         
-    @commands.command(description = "Check modlogs of a member.",help = "modlogs <member>")
-    @mod_role_check()
-    async def modlogs(self,ctx,member,index = 1):
-        guild = ctx.guild
-        store = member
-
-        if member.isnumeric():
-            member = await self.client.fetch_user(int(member))
-        else:
-            member = await commands.converter.MemberConverter().convert(ctx,member)
-
-
-        logs = await self.pull_data(guild.id, member.id)
-
-        if not logs:
-            logs = []
-
-        logs.reverse()
-        embed=discord.Embed(title=f"Mod Logs for {member.name}",description=f"{len(logs)} items found for {member.mention}", color=discord.Color.green())
-
-        index = int(index)
-        logamount = len(logs)
-        if index > 1:
-            if (index - 1) * 9 < logamount:
-                if int(index) * 9 > logamount:
-                    end = logamount 
-                else:
-                    end = (index)*9
-                
-                start = (index-1) * 9
-            else:
-                return await ctx.reply(f"There are not {index} pages.")
-        else:
-            start = 0
-            if logamount > 9:
-                end = 9
-            else:
-                end = logamount 
-        for log in range(start,end):
-            embed.add_field(name=f'Action {log+1}',value = f'**Action:** {logs[log][0]}\n{logs[log][1]}\n**Reason:** {logs[log][2]}\n**Moderator:** {logs[log][3]}',inline = True)
-
-        embed.set_footer(text=f"Showing page {index} out of {math.ceil(logamount/9)}")
-
-        await ctx.reply(embed = embed)
-
-        
-
-def setup(client):
-    client.add_cog(Mod(client))
+async def setup(client):
+    await client.add_cog(Mod(client))
