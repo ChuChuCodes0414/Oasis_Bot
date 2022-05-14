@@ -2,10 +2,9 @@ import discord
 from discord.ext import commands
 import firebase_admin
 from firebase_admin import db
-from datetime import datetime
 from discord.errors import Forbidden
 from discord import AuditLogAction
-from datetime import datetime
+import datetime
 from asyncio import sleep
 import time
 
@@ -16,6 +15,7 @@ class Invites(commands.Cog):
         Invite Log: `o!settings set invitelog <channel>` 
     '''
     def __init__(self, client):
+        self.short = "<:invite:950957804544471080> | Invite Tracking"
         self.client = client
         self.tracker = InviteTracker(client)
 
@@ -32,7 +32,7 @@ class Invites(commands.Cog):
 
         build = ""
         date = member.created_at
-        now = datetime.now()
+        now = datetime.datetime.now(datetime.timezone.utc)
         diff = now - date
         unix = time.mktime(date.timetuple())
         formatted = "<t:" + str(int(unix)) + ":F>"
@@ -52,8 +52,8 @@ class Invites(commands.Cog):
         
         emb = discord.Embed(title=f"{member} has Joined the Server!",description = f"{build}",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -74,7 +74,7 @@ class Invites(commands.Cog):
         unix = time.mktime(date.timetuple())
         formatted = "<t:" + str(int(unix)) + ":F>"
         build += f"**Member Leaving Information:** {member.mention} ( `{member.id}` )\n"
-        timedelta = datetime.utcnow() - member.joined_at
+        timedelta = datetime.datetime.now(datetime.timezone.utc) - member.joined_at
         if timedelta.days >= 7:
             build += f"**Joined at:** {formatted} ({timedelta.days//7} weeks ago)\n"
         elif timedelta.days >= 1:
@@ -95,8 +95,8 @@ class Invites(commands.Cog):
         
         emb = discord.Embed(title=f"{member} has left the Server!",description = f"{build}",
                                 color=discord.Color.red())
-        emb.timestamp = datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -216,7 +216,7 @@ class Invites(commands.Cog):
         await self.tracker.cache_invites()
         await ctx.reply("Cached Invites")
 
-    @commands.command(description = "How many invites do you have? And who invited you?",help = "invites [member]")
+    @commands.command(help = "How many invites do you have? And who invited you?")
     async def invites(self,ctx,member:discord.Member = None):
         ref = db.reference("/",app = firebase_admin._apps['invites'])
 
@@ -252,15 +252,13 @@ class Invites(commands.Cog):
 
         emb.add_field(name = "Invites:",value = f"`{invites}`")
         emb.add_field(name = "Leaves:",value = f"`{leaves}`")
-        emb.timestamp = datetime.utcnow()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon_url)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await ctx.send(embed = emb)
         
-
-        
-def setup(client):
-    client.add_cog(Invites(client))
+async def setup(client):
+    await client.add_cog(Invites(client))
 
 class InviteTracker():
     def __init__(self, bot):
@@ -298,7 +296,7 @@ class InviteTracker():
         if invite.guild.id not in self._cache.keys():
             return
         ref_invite = self._cache[invite.guild.id][invite.code]
-        if (ref_invite.created_at.timestamp()+ref_invite.max_age > datetime.utcnow().timestamp() or ref_invite.max_age == 0) and ref_invite.max_uses > 0 and ref_invite.uses == ref_invite.max_uses-1:
+        if (ref_invite.created_at.timestamp()+ref_invite.max_age > datetime.now().timestamp() or ref_invite.max_age == 0) and ref_invite.max_uses > 0 and ref_invite.uses == ref_invite.max_uses-1:
             try:
                 async for entry in invite.guild.audit_logs(limit=1, action=AuditLogAction.invite_delete):
                     if entry.target.code != invite.code:
@@ -341,7 +339,7 @@ class InviteTracker():
             pass
         for new_invite in await member.guild.invites():
             for cached_invite in self._cache[member.guild.id].values():
-                if new_invite.code == cached_invite.code and new_invite.uses - cached_invite.uses == 1 or cached_invite.revoked:
+                if new_invite.code == cached_invite.code and new_invite.uses > cached_invite.uses or cached_invite.revoked:
                     if cached_invite.revoked:
                         self._cache[member.guild.id].pop(cached_invite.code)
                     elif new_invite.inviter == cached_invite.inviter:

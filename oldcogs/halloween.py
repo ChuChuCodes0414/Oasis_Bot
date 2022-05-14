@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents, Button
 import datetime
 import math
 import firebase_admin
@@ -626,7 +625,7 @@ class Halloween(commands.Cog):
                 break
 
         embed = discord.Embed(title = f"Leaderboard for {ctx.guild.name} Halloween Event",description = build,color = discord.Color.random())
-        embed.timestamp = datetime.datetime.utcnow()
+        embed.timestamp = datetime.datetime.now()
 
         await ctx.reply(embed = embed)
 
