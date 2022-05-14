@@ -1,4 +1,5 @@
 sensitive.py
+cogs/__pycache__/
 firebasefiles/
 Procfile
 Aptfile
