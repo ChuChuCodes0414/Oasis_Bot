@@ -864,9 +864,10 @@ class MiscellaneousSettings(discord.ui.View):
         return interaction.user == self.ctx.author
     
     async def generate_embed(self):
-        prefix,ilogging,dj,dheistdrole,lottery = self.guild_settings.get("prefix",None),self.guild_settings.get("ilogging",None),self.guild_settings.get("dj",None),self.guild_settings.get("dheistdrole",None),self.guild_settings.get("lottery",None)
+        sprefix,prefix,ilogging,dj,dheistdrole,lottery = self.guild_settings.get("sprefix",None),self.guild_settings.get("prefix",None),self.guild_settings.get("ilogging",None),self.guild_settings.get("dj",None),self.guild_settings.get("dheistdrole",None),self.guild_settings.get("lottery",None)
         embed = discord.Embed(title = f"Server Miscellaneous Settings for {self.ctx.guild.name}")
-        embed.add_field(name = "Prefix",value = f"{prefix}")
+        embed.add_field(name = "Oasis Bot Prefix",value = f"{prefix}")
+        embed.add_field(name = "Serenity Bot Prefix",value = f"{sprefix}")
         if ilogging:
             embed.add_field(name = "Invite Logging Channel",value = f"<#{ilogging}>")
         else:
@@ -887,7 +888,7 @@ class MiscellaneousSettings(discord.ui.View):
         embed.set_footer(text = "Use the menu buttons below to configure server settings.")
         return embed
     
-    @discord.ui.button(label = "Prefix",style = discord.ButtonStyle.gray)
+    @discord.ui.button(label = "Oasis Prefix",style = discord.ButtonStyle.gray)
     async def setprefix(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(description = "Input the channel you want to set to the **Prefix** now!")
         embed.set_footer(text = "Type \"cancel\" to cancel your input.")
@@ -910,12 +911,44 @@ class MiscellaneousSettings(discord.ui.View):
                 await msg.delete()
                 break
             else:
-                embed = discord.Embed(description = "Input the role you want to set to the **Prefix** now!\n\n⚠ Your prefix must be a max of 3 characters!")
+                embed = discord.Embed(description = "Input the role you want to set to the **Oasis Prefix** now!\n\n⚠ Your prefix must be a max of 3 characters!")
                 embed.set_footer(text = "Type \"cancel\" to cancel your input.")
                 await self.message.edit(embed = embed)
                 await msg.delete()
                 continue
         self.guild_settings["prefix"] = msg.content
+        embed = await self.generate_embed()
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label = "Serenity Prefix",style = discord.ButtonStyle.gray)
+    async def setsprefix(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(description = "Input the channel you want to set to the **Serenity Prefix** now!")
+        embed.set_footer(text = "Type \"cancel\" to cancel your input.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            if len(msg.content) < 4 and len(msg.content) > 0:
+                await msg.delete()
+                break
+            else:
+                embed = discord.Embed(description = "Input the role you want to set to the **Serenity Prefix** now!\n\n⚠ Your prefix must be a max of 3 characters!")
+                embed.set_footer(text = "Type \"cancel\" to cancel your input.")
+                await self.message.edit(embed = embed)
+                await msg.delete()
+                continue
+        self.guild_settings["sprefix"] = msg.content
         embed = await self.generate_embed()
         await self.message.edit(embed = embed,view = self)
     
@@ -1087,7 +1120,7 @@ class MiscellaneousSettings(discord.ui.View):
         embed = await self.generate_embed()
         await self.message.edit(embed = embed,view = self)
     
-    @discord.ui.button(label = "✅ Confirm",style = discord.ButtonStyle.green,row = 1)
+    @discord.ui.button(label = "✅ Confirm",style = discord.ButtonStyle.green,row = 2)
     async def confirm(self,interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         for child in self.children: 
@@ -1095,7 +1128,7 @@ class MiscellaneousSettings(discord.ui.View):
         await self.message.edit(view=self) 
         self.stop()
 
-    @discord.ui.button(label = "❌ Cancel",style = discord.ButtonStyle.red,row = 1)
+    @discord.ui.button(label = "❌ Cancel",style = discord.ButtonStyle.red,row = 2)
     async def cancel(self,interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         for child in self.children: 

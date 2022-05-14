@@ -266,6 +266,7 @@ class Fun(commands.Cog):
                 if len(self.order) >= 20:
                     await self.grant_badge(ctx,ctx.author.id,"color")
                 break
+            
     @commands.command(help = "View your profile, with badges and fight stats.")
     async def profile(self,ctx,member :discord.Member = None):
         if not member:

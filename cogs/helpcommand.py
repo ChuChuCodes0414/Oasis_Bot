@@ -9,7 +9,7 @@ class MyHelp(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         message = self.get_destination()
-        embed = discord.Embed(title = "Oasis Bot Help",description = f"Categories Listed Below | `{len(list(chain.from_iterable(mapping.values())))}` Commands Loaded",color = discord.Color.random())
+        embed = discord.Embed(title = f"Bot Help",description = f"Categories Listed Below | `{len(list(chain.from_iterable(mapping.values())))}` Commands Loaded",color = discord.Color.random())
         for cog, commands in mapping.items():
             if cog and cog.qualified_name not in ['Dev','Jishaku','LoggingError','HelpCommand']:
                 embed.add_field(name = cog.qualified_name,value = cog.short + "\n" + f"`{len(commands)} Commands`")

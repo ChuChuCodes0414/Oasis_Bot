@@ -38,6 +38,8 @@ class EventTracking(commands.Cog):
         async def predicate(ctx):
             if ctx.author.guild_permissions.administrator:
                 return True
+            
+            '''
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             emanrole = ref.child(str(ctx.message.guild.id)).child('event').get()
             emanrole_ob = ctx.message.guild.get_role(emanrole)
@@ -45,11 +47,16 @@ class EventTracking(commands.Cog):
                 return True
             else:
                 return False
+            '''
+            return True
+            
         return commands.check(predicate)
 
     def eman_channel_check():
         async def predicate(ctx):
             if ctx.author.guild_permissions.administrator:
+                return True
+            else:
                 return True
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             echannel = ref.child(str(ctx.message.guild.id)).child('echannel').get()
@@ -132,11 +139,10 @@ class EventTracking(commands.Cog):
 
         timebuild = timing.timeparse(time,1,0)
         if isinstance(timebuild,str):
-            return await ctx.reply(embed = discord.Embed(description = time,color = discord.Color.red()))
+            return await ctx.send(embed = discord.Embed(description = timebuild,color = discord.Color.red()))
         until = discord.utils.utcnow() + timebuild
         unix = int(until.replace(tzinfo=datetime.timezone.utc).timestamp())
         
-
         embed=discord.Embed(title="<a:event:923046835952697395> It's Event Time <a:event:923046835952697395>" ,color=discord.Color.random())
         build = ""
         embed.set_author(name="Hosted by " + ctx.author.display_name,icon_url=ctx.author.avatar)

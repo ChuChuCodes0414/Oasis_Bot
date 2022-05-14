@@ -26,7 +26,7 @@ class Mod(commands.Cog):
     async def on_member_join(self,member):
         if member.guild.id == 798822518571925575:
             date = member.created_at
-            now = datetime.datetime.now()
+            now = datetime.datetime.now(datetime.timezone.utc)
             diff = now - date
 
             if diff.days < 30 and diff.days > 3:

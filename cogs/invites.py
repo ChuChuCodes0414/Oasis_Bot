@@ -2,10 +2,9 @@ import discord
 from discord.ext import commands
 import firebase_admin
 from firebase_admin import db
-from datetime import datetime
 from discord.errors import Forbidden
 from discord import AuditLogAction
-from datetime import datetime
+import datetime
 from asyncio import sleep
 import time
 
@@ -33,7 +32,7 @@ class Invites(commands.Cog):
 
         build = ""
         date = member.created_at
-        now = datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
         diff = now - date
         unix = time.mktime(date.timetuple())
         formatted = "<t:" + str(int(unix)) + ":F>"
@@ -53,7 +52,7 @@ class Invites(commands.Cog):
         
         emb = discord.Embed(title=f"{member} has Joined the Server!",description = f"{build}",
                                 color=discord.Color.green())
-        emb.timestamp = datetime.now()
+        emb.timestamp = datetime.datetime.now()
         emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
@@ -75,7 +74,7 @@ class Invites(commands.Cog):
         unix = time.mktime(date.timetuple())
         formatted = "<t:" + str(int(unix)) + ":F>"
         build += f"**Member Leaving Information:** {member.mention} ( `{member.id}` )\n"
-        timedelta = datetime.now(datetime.timezone.utc) - member.joined_at
+        timedelta = datetime.datetime.now(datetime.timezone.utc) - member.joined_at
         if timedelta.days >= 7:
             build += f"**Joined at:** {formatted} ({timedelta.days//7} weeks ago)\n"
         elif timedelta.days >= 1:
@@ -96,7 +95,7 @@ class Invites(commands.Cog):
         
         emb = discord.Embed(title=f"{member} has left the Server!",description = f"{build}",
                                 color=discord.Color.red())
-        emb.timestamp = datetime.now()
+        emb.timestamp = datetime.datetime.now()
         emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
@@ -253,7 +252,7 @@ class Invites(commands.Cog):
 
         emb.add_field(name = "Invites:",value = f"`{invites}`")
         emb.add_field(name = "Leaves:",value = f"`{leaves}`")
-        emb.timestamp = datetime.now()
+        emb.timestamp = datetime.datetime.now()
         emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await ctx.send(embed = emb)

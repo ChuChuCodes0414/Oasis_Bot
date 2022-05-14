@@ -20,23 +20,23 @@ class Dev(commands.Cog):
         if message.guild: # message is not DM
             mention = f'<@{self.client.user.id}>'
             if mention == message.content:
-                if self.client.beta:
-                    prefix = 'sb!' 
+                if self.client.serenity:
+                    ref = db.reference("/",app = firebase_admin._apps['settings'])
+                    prefix = (ref.child(str(message.guild.id)).child('sprefix').get())
                 else:
                     ref = db.reference("/",app = firebase_admin._apps['settings'])
                     prefix = (ref.child(str(message.guild.id)).child('prefix').get())
                 if prefix:
                     embed = discord.Embed(title="Hello!",description=f"The prefix in this server is: `{prefix}`", color=discord.Color.green())
                 else:
-                    embed = discord.Embed(title="Hello!",description=f"It seems like this server is not set up! Run `@Oasis Bot setup` to get started.", color=discord.Color.green())
+                    embed = discord.Embed(title="Hello!",description=f"It seems like this server is not set up! Run `@Oasis Bot setup` or `@Serenity Bot setup` to get started.", color=discord.Color.green())
                 await message.reply(embed =embed)
             elif message.content == mention + " setup":
                 ref = db.reference("/",app = firebase_admin._apps['settings'])
                 if not ref.child(str(message.guild.id)).get():
-                    serverconf = {'dj': None, 'event': None, 'giveaway': None, 'mod': [None], 'modtrack': [None], 'pchannels': [None], 'prefix': 'o!'}
-
+                    serverconf = {'dj': None, 'event': None, 'giveaway': None, 'mod': [None], 'modtrack': [None], 'pchannels': [None], 'prefix': 'o!','sprefix':'s!'}
                     ref.child(str(message.guild.id)).set(serverconf)
-                    embed = discord.Embed(title="All set up!",description=f"You are all set up! The default prefix is `o!`", color=discord.Color.green())
+                    embed = discord.Embed(title="All set up!",description=f"You are all set up! The default prefix is `o!` for Oasis Bot and `s!` for Serenity Bot!", color=discord.Color.green())
                 else:
                     embed = discord.Embed(title="Uh oh",description=f"It looks like this server is already set up!", color=discord.Color.green())
                 await message.reply(embed =embed)
@@ -49,7 +49,7 @@ class Dev(commands.Cog):
         if ref.child(str(guild.id)).get():
             pass
         else:
-            serverconf = {'prefix': 'o!'}
+            serverconf = {'prefix': 'o!','sprefix':'s!'}
             ref.child(str(guild.id)).set(serverconf)
 
         channel = self.client.get_channel(int(849761988628316191))

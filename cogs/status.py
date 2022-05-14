@@ -40,8 +40,8 @@ class Status(commands.Cog):
     @commands.command(help = "Quick information about the bot.")
     async def botinfo(self,ctx):
         guild = ctx.guild
-        embed = discord.Embed(title="Oasis Bot",description=f"Bot Information", color=discord.Color.random())
-        embed.add_field(name="Name", value=f"Oasis Bot", inline=True) 
+        embed = discord.Embed(title=f"{self.client.user.name}",description=f"Bot Information", color=discord.Color.random())
+        embed.add_field(name="Name", value=f"{self.client.user.name}", inline=True) 
         embed.add_field(name="Creator", value=f"ChuGames#0001", inline=True)
         embed.add_field(name="Current Version", value=f"2.0.0", inline=False)
         embed.add_field(name="Description", value=f"A helpful bot with a variety of features, from private channels to mod logging. Ping the bot to find out the prefix!", inline=False)
@@ -55,7 +55,8 @@ class Status(commands.Cog):
     @commands.command(help = "Invite the bot or join the support server.")
     async def invite(self,ctx):
         embed = discord.Embed(title = "Invite links",description = "Invite the bot",color = discord.Color.random())
-        embed.add_field(name = 'Bot Invite',value = '[Bot Invite](https://discord.com/api/oauth2/authorize?client_id=830817370762248242&permissions=8&scope=bot)',inline = False)
+        embed.add_field(name = 'Oasis Bot Invite',value = "Currently Unvailable\n[Read More Here](https://pastebin.com/TUBAdUhT)")
+        embed.add_field(name = 'Serenity Bot Invite',value = '[Bot Invite](https://discord.com/api/oauth2/authorize?client_id=752335987761217576&permissions=8&scope=bot)',inline = False)
         embed.add_field(name = 'Support Server',value = '[Server Invite](https://discord.com/invite/9pmGDc8pqQ)',inline = False)
         embed.timestamp = datetime.datetime.now()
         embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)

@@ -147,7 +147,7 @@ class PrivateChannels(commands.Cog):
                 channel_object = ctx.guild.get_channel(int(channel))
                 if channel_object:
                     if channel_object.overwrites_for(member).is_empty():
-                        if allchannels[channel][1] == int(ctx.userid):
+                        if allchannels[channel][1] == int(member.id):
                             overwrite = channel_object.overwrites_for(member)
                             overwrite.manage_channels = True
                             overwrite.read_messages = True
@@ -164,7 +164,7 @@ class PrivateChannels(commands.Cog):
                             await channel_object.send(embed = embed)
                             build += f"<#{channel}>\n"
                 else:
-                    error += f"{channel}\n"
+                    error += f"\n{channel}\n"
                 await asyncio.sleep(0.5)
         embed = discord.Embed(title = f"Private Channels that were Fixed for {member.name}",description = ownerbuild + build + error,color = discord.Color.random())
         embed.timestamp = datetime.datetime.now()

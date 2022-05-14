@@ -63,21 +63,21 @@ bans_app = firebase_admin.initialize_app(cred_obj_bans , {
 
 class Client(commands.Bot):
     def __init__(self):
-        self.beta = False
+        self.serenity = False
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
         super().__init__(command_prefix = self.get_prefix,intents = intents)
         
-        if not self.beta:
+        if not self.serenity:
             self.change = cycle(['with your feelings','o!help | @Oasis Bot setup'])
         else:
-            self.change = cycle(['with new code!','sb!help | @Serenity Bot setup'])
+            self.change = cycle(['with your feelings!','s!help | @Serenity Bot setup'])
     
-    async def get_prefix(self,message):   
-        if self.beta:
-            return 'sb!' 
-        ref = db.reference("/",app = firebase_admin._apps['settings'])
+    async def get_prefix(self,message):  
+        ref = db.reference("/",app = firebase_admin._apps['settings']) 
+        if self.serenity:
+            return (ref.child(str(message.guild.id)).child('sprefix').get())
         return (ref.child(str(message.guild.id)).child('prefix').get())
 
     async def setup_hook(self):
@@ -104,8 +104,6 @@ client = Client()
 
 @client.check
 def global_check(ctx):
-    if ctx.author.id != 570013288977530880:
-        return False
     ref = db.reference("/",app = firebase_admin._apps['settings'])
     settings = ref.child(str(ctx.guild.id)).child("rules").child(ctx.command.name).get()
     if not settings:
@@ -151,7 +149,7 @@ def global_check(ctx):
 
 # prefix handling    
 
-if client.beta:
+if client.serenity:
     client.run(sensitive.BETA_BOT_TOKEN)
 else:
     client.run(sensitive.BOT_TOKEN)

@@ -28,7 +28,6 @@ class ModTracking(commands.Cog):
                 return True
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             modroles = ref.child(str(ctx.message.guild.id)).child('modtrack').get()
-
             if modroles == None:
                 return False
             for role in modroles:
