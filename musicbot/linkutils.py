@@ -73,7 +73,7 @@ async def get_spotify_playlist(url):
                         pass
                 return links
             except:
-                if config.SPOTIFY_ID != "" or config.SPOTIFY_SECRET != "":
+                if sensitive.SPOTIFY_ID != "" or sensitive.SPOTIFY_SECRET != "":
                     print("ERROR: Check spotify CLIENT_ID and SECRET")
 
         if "open.spotify.com/playlist" in url:
@@ -95,7 +95,7 @@ async def get_spotify_playlist(url):
                 return links
 
             except:
-                if config.SPOTIFY_ID != "" or config.SPOTIFY_SECRET != "":
+                if sensitive.SPOTIFY_ID != "" or sensitive.SPOTIFY_SECRET != "":
                     print("ERROR: Check spotify CLIENT_ID and SECRET")
 
     async with session.get(url) as response:

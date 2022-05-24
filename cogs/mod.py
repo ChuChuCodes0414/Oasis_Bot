@@ -31,10 +31,10 @@ class Mod(commands.Cog):
 
             if diff.days < 30 and diff.days > 3:
                 embed=discord.Embed(title=f"⚠ Alert For {member}",description=f"`There is an account under 30 days old!`", color=discord.Color.red())
-                embed.set_thumbnail(url = member.avatar_url)
+                embed.set_thumbnail(url = member.avatar)
                 embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
                 embed.add_field(name = "Account Created On",value= f'{date}',inline = True)
-                embed.timestamp = datetime.now()
+                embed.timestamp = datetime.datetime.now()
                 embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon)
                 channel = self.client.get_channel(825882336594886687)
                 await channel.send(embed=embed)\

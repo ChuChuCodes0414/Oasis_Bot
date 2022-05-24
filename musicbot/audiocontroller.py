@@ -27,6 +27,7 @@ class AudioController(object):
         self.playlist = Playlist()
         self.current_song = None
         self.guild = guild
+        self.skips = []
         self.voice_client = None
 
         self._volume = 100
@@ -59,6 +60,7 @@ class AudioController(object):
         next_song = self.playlist.next(self.current_song)
 
         self.current_song = None
+        self.skips = []
 
         if next_song is None:
             return
@@ -304,6 +306,7 @@ class AudioController(object):
             return
 
         self.playlist.loop = False
+        self.skips = []
         self.playlist.next(self.current_song)
         self.clear_queue()
         self.guild.voice_client.stop()

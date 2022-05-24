@@ -48,12 +48,12 @@ class Invites(commands.Cog):
         elif inviter:
             build += f"**Invited By:** {inviter.mention} ( `{inviter.id} `)"
         else:
-            build += f"**I could not trace how this member joined! Perhaps they joined through a vanity invite, or temporary link.**"
+            build += f"**I could not trace how this member joined! Perhaps they joined through temporary link.**"
         
         emb = discord.Embed(title=f"{member} has Joined the Server!",description = f"{build}",
                                 color=discord.Color.green())
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -91,12 +91,12 @@ class Invites(commands.Cog):
         elif inviter:
             build += f"**Invited By:** {inviter.mention} (`{inviter.id}`)"
         else:
-            build += f"**I could not trace how this member joined! Perhaps they joined through a vanity invite, or temporary link.**"
+            build += f"**I could not trace how this member joined! Perhaps they joined through a temporary link.**"
         
         emb = discord.Embed(title=f"{member} has left the Server!",description = f"{build}",
                                 color=discord.Color.red())
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -253,7 +253,7 @@ class Invites(commands.Cog):
         emb.add_field(name = "Invites:",value = f"`{invites}`")
         emb.add_field(name = "Leaves:",value = f"`{leaves}`")
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
 
         await ctx.send(embed = emb)
         

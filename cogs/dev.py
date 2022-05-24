@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import datetime
 import firebase_admin
 from firebase_admin import db
@@ -8,10 +8,54 @@ import asyncio
 class Dev(commands.Cog):
     def __init__(self,client):
         self.client = client
+        self.commands = {}
+        self.users = {}
+        self.guilds = {}
+        self.post_recap.start()
     
     @commands.Cog.listener()
     async def on_ready(self):
         print('Dev Cog Loaded.')
+
+    @tasks.loop(hours=24,reconnect = True)
+    async def post_recap(self):
+        sortedcomm = sorted(self.commands, key=self.commands.get, reverse=True)
+        commres = ""
+        x = max(len(self.commands),10)
+        for command in sortedcomm[:x]:
+            commres += f"**{command}:** {self.commands[command]} uses\n"
+        sortedusers = sorted(self.users, key=self.users.get, reverse=True)
+        userres = ""
+        x = max(len(self.users),10)
+        for user in sortedusers[:x]:
+            userres += f"**{user}:** {self.users[user]} commands\n"
+        sortedguilds = sorted(self.guilds,key = self.guilds.get,reverse = True)
+        guildsres = ""
+        x = max(len(self.guilds),10)
+        for guild in sortedguilds[:x]:
+            guildsres += f"**{guild.name}** {self.guilds[guild]} commands\n"
+        now = discord.utils.utcnow()
+        unix = int(now.replace(tzinfo=datetime.timezone.utc).timestamp())
+        embed = discord.Embed(title = "Daily Command Recap",description = f"<t:{unix}:F>\nUnique Commands: {len(self.commands)} | Total Users: {len(self.users)} | Total Guilds: {len(self.guilds)}")
+        embed.add_field(name = "Commands",value = commres or "None")
+        embed.add_field(name = "Users",value = userres or "None")
+        embed.add_field(name = "Guilds",value = guildsres or "None")
+        channel = self.client.get_channel(int(977037266172137505))
+        await channel.send(embed = embed)
+        self.commands,self.users,self.guilds = {},{},{}
+    
+    @post_recap.before_loop
+    async def before_recap(self):
+        await self.client.wait_until_ready()
+
+    def cog_unload(self):
+        self.some_task.cancel()
+
+    @commands.Cog.listener()
+    async def on_command_completion(self,ctx):
+        self.commands[ctx.command.name] = self.commands.get(ctx.command.name,0) + 1
+        self.users[ctx.author] = self.users.get(ctx.author,0) + 1
+        self.guilds[ctx.guild] = self.guilds.get(ctx.guild,0) + 1
     
     @commands.Cog.listener()
     async def on_message(self,message):
@@ -20,23 +64,22 @@ class Dev(commands.Cog):
         if message.guild: # message is not DM
             mention = f'<@{self.client.user.id}>'
             if mention == message.content:
-                if self.client.serenity:
-                    ref = db.reference("/",app = firebase_admin._apps['settings'])
-                    prefix = (ref.child(str(message.guild.id)).child('sprefix').get())
+                if self.client.beta:
+                    prefix = ","
                 else:
                     ref = db.reference("/",app = firebase_admin._apps['settings'])
                     prefix = (ref.child(str(message.guild.id)).child('prefix').get())
                 if prefix:
                     embed = discord.Embed(title="Hello!",description=f"The prefix in this server is: `{prefix}`", color=discord.Color.green())
                 else:
-                    embed = discord.Embed(title="Hello!",description=f"It seems like this server is not set up! Run `@Oasis Bot setup` or `@Serenity Bot setup` to get started.", color=discord.Color.green())
+                    embed = discord.Embed(title="Hello!",description=f"It seems like this server is not set up! Run `@Oasis Bot setup` to get started.", color=discord.Color.green())
                 await message.reply(embed =embed)
             elif message.content == mention + " setup":
                 ref = db.reference("/",app = firebase_admin._apps['settings'])
                 if not ref.child(str(message.guild.id)).get():
                     serverconf = {'dj': None, 'event': None, 'giveaway': None, 'mod': [None], 'modtrack': [None], 'pchannels': [None], 'prefix': 'o!','sprefix':'s!'}
                     ref.child(str(message.guild.id)).set(serverconf)
-                    embed = discord.Embed(title="All set up!",description=f"You are all set up! The default prefix is `o!` for Oasis Bot and `s!` for Serenity Bot!", color=discord.Color.green())
+                    embed = discord.Embed(title="All set up!",description=f"You are all set up! The default prefix is `o!` for Oasis Bot.", color=discord.Color.green())
                 else:
                     embed = discord.Embed(title="Uh oh",description=f"It looks like this server is already set up!", color=discord.Color.green())
                 await message.reply(embed =embed)
@@ -87,6 +130,32 @@ class Dev(commands.Cog):
         embed.timestamp = datetime.datetime.now()
         embed.set_footer(text = f'Oasis Bot Dev Logging',icon_url = channel.guild.icon)
         await channel.send(embed = embed)
+
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def recap(self,ctx):
+        sortedcomm = sorted(self.commands, key=self.commands.get, reverse=True)
+        commres = ""
+        x = max(len(self.commands),10)
+        for command in sortedcomm[:x]:
+            commres += f"**{command}:** {self.commands[command]} uses\n"
+        sortedusers = sorted(self.users, key=self.users.get, reverse=True)
+        userres = ""
+        x = max(len(self.users),10)
+        for user in sortedusers[:x]:
+            userres += f"**{user}:** {self.users[user]} commands\n"
+        sortedguilds = sorted(self.guilds,key = self.guilds.get,reverse = True)
+        guildsres = ""
+        x = max(len(self.guilds),10)
+        for guild in sortedguilds[:x]:
+            guildsres += f"**{guild.name}** {self.guilds[guild]} commands\n"
+        now = discord.utils.utcnow()
+        unix = int(now.replace(tzinfo=datetime.timezone.utc).timestamp())
+        embed = discord.Embed(title = "Daily Command Recap",description = f"<t:{unix}:F>\nUnique Commands: {len(self.commands)} | Total Users: {len(self.users)} | Total Guilds: {len(self.guilds)}")
+        embed.add_field(name = "Commands",value = commres or "None")
+        embed.add_field(name = "Users",value = userres or "None")
+        embed.add_field(name = "Guilds",value = guildsres or "None")
+        await ctx.reply(embed = embed)
 
     @commands.command(hidden=True)
     @commands.is_owner()

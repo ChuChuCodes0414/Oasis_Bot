@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions
 import asyncio
-
+import firebase_admin
 from musicbot import utils
 from musicbot import linkutils
 from musicbot import config
@@ -36,6 +36,18 @@ class Music(commands.Cog):
 
     async def register(self,guild):
         guild_to_audiocontroller[guild] = AudioController(self.bot, guild)
+    
+    async def dj_role(self,ctx):
+        ref = firebase_admin.db.reference("/",app = firebase_admin._apps['settings'])
+        djrole = ref.child(str(ctx.guild.id)).child('dj').get()
+        role_ob = ctx.guild.get_role(djrole)
+        if ctx.voice_client and role_ob:
+            if role_ob in ctx.author.roles or len(ctx.voice_client.channel.members) <= 2:
+                return True
+            else:
+                return False
+        else:
+            return True
 
     # logic is split to uconnect() for wide usage
     @commands.command(name='connect', brief=config.HELP_CONNECT_LONG, help=config.HELP_CONNECT_SHORT, aliases=['c','join'])
@@ -47,6 +59,9 @@ class Music(commands.Cog):
 
     @commands.command(name='disconnect', brief=config.HELP_DISCONNECT_LONG, help=config.HELP_DISCONNECT_SHORT, aliases=['dc'])
     async def _disconnect(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
             return
@@ -57,6 +72,9 @@ class Music(commands.Cog):
 
     @commands.command(name='reset', brief=config.HELP_DISCONNECT_LONG, help=config.HELP_DISCONNECT_SHORT, aliases=['rs', 'restart'])
     async def _reset(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
             return
@@ -73,6 +91,9 @@ class Music(commands.Cog):
 
     @commands.command(name='changechannel', brief=config.HELP_CHANGECHANNEL_LONG, help=config.HELP_CHANGECHANNEL_SHORT, aliases=['cc'])
     async def _change_channel(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         if not ctx.guild.voice_client:
             await ctx.send(embed = discord.Embed(description = "The bot is not in a voice channel!",color = discord.Color.red()))
             return
@@ -136,7 +157,9 @@ class Music(commands.Cog):
 
     @commands.command(name='loop', brief=config.HELP_LOOP_LONG, help=config.HELP_LOOP_SHORT, aliases=['lo'])
     async def _loop(self, ctx):
-
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         current_guild = utils.get_guild(self.bot, ctx.message)
         audiocontroller = utils.guild_to_audiocontroller[current_guild]
 
@@ -156,6 +179,9 @@ class Music(commands.Cog):
 
     @commands.command(name='shuffle', brief=config.HELP_SHUFFLE_LONG, help=config.HELP_SHUFFLE_SHORT, aliases=["sh"])
     async def _shuffle(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         current_guild = utils.get_guild(self.bot, ctx.message)
         audiocontroller = utils.guild_to_audiocontroller[current_guild]
 
@@ -174,6 +200,9 @@ class Music(commands.Cog):
         
     @commands.command(name = 'remove',brief = "Remove a song, by index, from the playlist.",help = "Remove a song.",aliases = ["re"])
     async def _remove(self,ctx,index:int):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         if index < 1:
             return await ctx.send(embed = discord.Embed(description = "Index must be at least one!",color = discord.Color.red()))
         current_guild = utils.get_guild(self.bot, ctx.message)
@@ -237,6 +266,9 @@ class Music(commands.Cog):
 
     @commands.command(name='stop', brief=config.HELP_STOP_LONG, help=config.HELP_STOP_SHORT, aliases=['st'])
     async def _stop(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         current_guild = utils.get_guild(self.bot, ctx.message)
 
         if await utils.play_check(ctx) == False:
@@ -256,6 +288,14 @@ class Music(commands.Cog):
             return
 
         audiocontroller = utils.guild_to_audiocontroller[current_guild]
+
+        if not await self.dj_role(ctx):
+            if ctx.author.id in audiocontroller.skips:
+                return await ctx.send(embed = discord.Embed(description = f"You have already voted to skip!",color = discord.Color.red()))
+            audiocontroller.skips.append(ctx.author.id)
+            if not len(audiocontroller.skips) >= len(ctx.voice_client.channel.members)//2:
+                return await ctx.send(embed = discord.Embed(description = f"You have voted to skip! ({len(audiocontroller.skips)}/{len(ctx.voice_client.channel.members)//2})",color = discord.Color.green()))
+
         audiocontroller.playlist.loop = False
 
         audiocontroller.timer.cancel()
@@ -269,6 +309,9 @@ class Music(commands.Cog):
 
     @commands.command(name='clear', brief=config.HELP_CLEAR_LONG, help=config.HELP_CLEAR_SHORT)
     async def _clear(self, ctx):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         current_guild = utils.get_guild(self.bot, ctx.message)
 
         if await utils.play_check(ctx) == False:
@@ -328,6 +371,9 @@ class Music(commands.Cog):
 
     @commands.command(name='volume', aliases=["vol"], brief=config.HELP_VOL_LONG, help=config.HELP_VOL_SHORT)
     async def _volume(self, ctx, *args):
+        if not await self.dj_role(ctx):
+            await ctx.send(embed = discord.Embed(description = "You must have the DJ role for this function!",color = discord.Color.red()))
+            return
         if await utils.play_check(ctx) == False:
             return
 

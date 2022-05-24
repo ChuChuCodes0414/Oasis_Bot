@@ -30,7 +30,9 @@ class EventTracking(commands.Cog):
         'fight':'Fight another chosen opponent, or the sponsor, for the prize of the event! Fight details will be specified in the event channel',
         'gartic':'Try to identify the drawing that is shown before everyone else! But be careful, if you fail to identify a round, your game is over!',
         'acro':'Come up with a funny acronym for a set of letters provided, and then vote on which one is the best!',
-        'nunchi':'Count up from a number in order, but if you are the second person to say that number you are eliminated!'
+        'nunchi':'Count up from a number in order, but if you are the second person to say that number you are eliminated!',
+        'splitorsteal':'Be selected along with another user, and decide whether to split or steal a prize!',
+        'bingo':'Mark out numbers and be the first to obtain a specified number of bingos on your card to win!'
         }
         self.short = "<a:event:923046835952697395> | Event Tracking"
 
@@ -38,8 +40,7 @@ class EventTracking(commands.Cog):
         async def predicate(ctx):
             if ctx.author.guild_permissions.administrator:
                 return True
-            
-            '''
+        
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             emanrole = ref.child(str(ctx.message.guild.id)).child('event').get()
             emanrole_ob = ctx.message.guild.get_role(emanrole)
@@ -47,16 +48,12 @@ class EventTracking(commands.Cog):
                 return True
             else:
                 return False
-            '''
-            return True
-            
+
         return commands.check(predicate)
 
     def eman_channel_check():
         async def predicate(ctx):
             if ctx.author.guild_permissions.administrator:
-                return True
-            else:
                 return True
             ref = db.reference("/",app = firebase_admin._apps['settings'])
             echannel = ref.child(str(ctx.message.guild.id)).child('echannel').get()
@@ -74,13 +71,16 @@ class EventTracking(commands.Cog):
 
     async def add_log(self,ctx,user):
         ref = db.reference("/",app = firebase_admin._apps['elead'])
-        log = ref.child(str(ctx.message.guild.id)).child(str(user)).get() or 0
-        ref.child(str(ctx.message.guild.id)).child(str(user)).set(log+1)
+        log = ref.child(str(ctx.message.guild.id)).child(str(user)).child("total").get() or 0
+        weekly = ref.child(str(ctx.message.guild.id)).child(str(user)).child("weekly").get() or 0
+        ref.child(str(ctx.message.guild.id)).child(str(user)).child("total").set(log+1)
+        ref.child(str(ctx.message.guild.id)).child(str(user)).child("weekly").set(weekly+1)
         return log + 1
 
     async def set_log(self,ctx,user,amount):
         ref = db.reference("/",app = firebase_admin._apps['elead'])
-        ref.child(str(ctx.message.guild.id)).child(str(user)).set(amount)
+        ref.child(str(ctx.message.guild.id)).child(str(user)).child("total").set(amount)
+        #ref.child(str(ctx.message.guild.id)).child(str(user)).child("weekly").set(amount)
         return amount
 
     async def remove_log(self,ctx,user):
@@ -91,18 +91,26 @@ class EventTracking(commands.Cog):
             return False
         return True
 
-    async def get_leaderboard(self,ctx):
+    async def get_leaderboard(self,ctx,category):
         ref = db.reference("/",app = firebase_admin._apps['elead'])
         log = ref.child(str(ctx.message.guild.id)).get()
+
+        def check(a):
+            try:
+                return log[a].get(category,0) + log[a].get(category,0)
+            except:
+                return 0
+
         if log:
-            return sorted(log, key=log.get, reverse=True) , log
+            return sorted(log, key= lambda a: check(a), reverse=True) , log
         else:
             return {},{}
 
     async def get_amount(self,ctx,user):
         ref = db.reference("/",app = firebase_admin._apps['elead'])
-        log = ref.child(str(ctx.message.guild.id)).child(str(user)).get() or 0
-        return log
+        log = ref.child(str(ctx.message.guild.id)).child(str(user)).child("total").get() or 0
+        weekly = ref.child(str(ctx.message.guild.id)).child(str(user)).child("weekly").get() or 0
+        return log,weekly
 
     async def ping_event(self,ctx):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
@@ -131,7 +139,7 @@ class EventTracking(commands.Cog):
 
         channel = await commands.converter.TextChannelConverter().convert(ctx,location.strip())
         donor = await commands.converter.MemberConverter().convert(ctx,donor.strip())
-
+        event = event.strip().lower()
         if event in self.eventslist.keys():
             eventinfo = self.eventslist[event]
         else:
@@ -178,17 +186,40 @@ class EventTracking(commands.Cog):
     @eman_role_check()
     async def eamount(self,ctx,user:discord.Member = None):
         user = user or ctx.message.author
-        amount = await self.get_amount(ctx,user.id)
-        embed=discord.Embed(description =f"Event Amount for {user}: `{amount}` Events",color=discord.Color.random())
+        amount,weekly = await self.get_amount(ctx,user.id)
+        embed=discord.Embed(description =f"__**Event Details for {user}**__\nTotal Event Amount for: `{amount}` Events\nWeekly Event Amount: `{weekly}` Events",color=discord.Color.random())
         await ctx.reply(embed=embed)
 
-    @commands.command(aliases = ['eventlb','elb'],help = "Show the events leaderboard.")
+    @commands.command(aliases = ['eventlb','elb'],help = "Show the weekly or total events leaderboard.")
     @eman_role_check()
-    async def eleaderboard(self,ctx):
-        users,log = await self.get_leaderboard(ctx)
-        formatter = EventPageSource(users, log)
+    async def eleaderboard(self,ctx,category = "total"):
+        if category.lower() not in ['total','weekly']:
+            return await ctx.reply(embed = discord.Embed(title = "Your only two leaderboard options are `total` and `weekly`!",color = discord.Color.red()))
+        users,log = await self.get_leaderboard(ctx,category.lower())
+        if not log:
+            return await ctx.reply(embed = discord.Embed(title = "No event data for this server!",color = discord.Color.red()))
+        formatter = EventPageSource(users, log,category.lower())
         menu = MyMenuPages(formatter, delete_message_after=True)
         await menu.start(ctx)
+    
+    @commands.command(help = "Reset the weekly leaderboard and show an embed with winners.")
+    @commands.has_permissions(administrator= True)
+    async def eresetweekly(self,ctx):
+        ref = db.reference("/",app = firebase_admin._apps['elead'])
+        log = ref.child(str(ctx.guild.id)).get()
+        if not log:
+            return await ctx.reply(embed = discord.Embed(title = "No event data for this server!",color = discord.Color.red()))
+        embed = discord.Embed(description = "Resetting weekly leaderboard! Please wait...",color = discord.Color.yellow())
+        message = await ctx.reply(embed = embed)
+        users,log = await self.get_leaderboard(ctx,"weekly")
+        embed = discord.Embed(title = "Weekly Leaderboard Reset",description = "This week's winners are below",color = discord.Color.gold())
+        for place,user in enumerate(users[:3]):
+            amount = log[user].get("weekly",0)
+            embed.add_field(name = f"Rank #{place+1}",value = f"<@{user}> `{amount}` Events",inline = False)
+        for user in log:
+            ref.child(str(ctx.guild.id)).child(str(user)).child("weekly").delete()
+        await ctx.send(embed = embed)
+        await message.delete()
 
     @commands.command(help = "Set the log amount for a specified user")
     @commands.has_permissions(administrator= True)
@@ -279,11 +310,12 @@ class MyMenuPages(ui.View, menus.MenuPages):
         await self.message.edit(view=self) 
     
 class EventPageSource(menus.ListPageSource):
-    def __init__(self, data, log):
+    def __init__(self, data, log,category):
         super().__init__(data, per_page=10)
         self.log = log
+        self.category = category
     def format_leaderboard_entry(self, no, user):
-        return f"**{no}. <@{user}>** `{self.log[user]} events`"
+        return f"**{no}. <@{user}>** `{self.log[user].get(self.category,0)} events`"
     async def format_page(self, menu, users):
         page = menu.current_page
         max_page = self.get_max_pages()

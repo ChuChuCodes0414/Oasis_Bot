@@ -137,7 +137,7 @@ class LoggingError(commands.Cog):
         if self.client.user.id == 830817370762248242:
             channel = self.client.get_channel(int(850553146421149756))
         else:
-            channel = self.client.get_channel(int(908467248719605763))
+            channel = self.client.get_channel(int(975508813929119764))
             
 
         embed = discord.Embed(title = f'⚠ There was an error that was not traced!',description = f'On Command: {ctx.command.name}',color = discord.Color.red())

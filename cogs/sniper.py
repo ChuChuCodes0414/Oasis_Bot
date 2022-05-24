@@ -33,7 +33,7 @@ class Sniper(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self,guild):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
-        data = ref.child(str(guild.id)).get()
+        data = ref.child(str(guild.id)).get() or None
         self.settings[int(guild.id)] = [data.get("snipelb",None),data.get("snipecd",None)]
     
     @commands.Cog.listener()

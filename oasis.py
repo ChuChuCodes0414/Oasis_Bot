@@ -16,11 +16,6 @@ eleaderboard_app = firebase_admin.initialize_app(cred_obj_eleaderboard , {
     'databaseURL': sensitive.ELEADERBOARD_LINK
     },name="elead")
 
-cred_obj_modlogs = sensitive.CRED_OBJECT_MODLOGS
-modlogs_app = firebase_admin.initialize_app(cred_obj_modlogs , {
-    'databaseURL':sensitive.MODLOGS_LINK
-    },name="modlogs")
-
 cred_obj = sensitive.CRED_OBJECT_PCHANNEL
 channels_app = firebase_admin.initialize_app(cred_obj , {
     'databaseURL': sensitive.PCHANNEL_LINK
@@ -35,11 +30,6 @@ cred_obj_settings = sensitive.CRED_OBJ_SETTINGS
 settings_app = firebase_admin.initialize_app(cred_obj_settings , {
     'databaseURL': sensitive.SETTINGS_LINK
     },name="settings")
-
-cred_obj_freeloader = sensitive.CRED_OBJ_FREELOADER
-freeloader_app = firebase_admin.initialize_app(cred_obj_freeloader , {
-    'databaseURL':sensitive.FREELOADER_LINK
-    },name="freeloader")
 
 cred_obj_profile = sensitive.CRED_OBJ_PROFILE
 profile_app = firebase_admin.initialize_app(cred_obj_profile , {
@@ -63,21 +53,21 @@ bans_app = firebase_admin.initialize_app(cred_obj_bans , {
 
 class Client(commands.Bot):
     def __init__(self):
-        self.serenity = False
+        self.beta = False
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
         super().__init__(command_prefix = self.get_prefix,intents = intents)
         
-        if not self.serenity:
-            self.change = cycle(['with your feelings','o!help | @Oasis Bot setup'])
+        if self.beta:
+            self.change = cycle(['with your feelings',',help'])
         else:
-            self.change = cycle(['with your feelings!','s!help | @Serenity Bot setup'])
+            self.change = cycle(['with your feelings!','o!help | @Oasis Bot setup'])
     
     async def get_prefix(self,message):  
         ref = db.reference("/",app = firebase_admin._apps['settings']) 
-        if self.serenity:
-            return (ref.child(str(message.guild.id)).child('sprefix').get())
+        if self.beta:
+            return (",")
         return (ref.child(str(message.guild.id)).child('prefix').get())
 
     async def setup_hook(self):
@@ -149,7 +139,7 @@ def global_check(ctx):
 
 # prefix handling    
 
-if client.serenity:
-    client.run(sensitive.BETA_BOT_TOKEN)
+if client.beta:
+    client.run(sensitive.DEVELOPMENT_BOT_TOKEN)
 else:
     client.run(sensitive.BOT_TOKEN)

@@ -1,9 +1,4 @@
 
-
-SPOTIFY_ID: str = "c3d55965763d4d328883e98f6e06d1e2"
-SPOTIFY_SECRET: str = "6d7dd6b1765e4cd692b3c09e5e024283"
-
-
 EMBED_COLOR = 0x4dd4d0  #replace after'0x' with desired hex code ex. '#ff0188' >> '0xff0188'
 
 SUPPORTED_EXTENSIONS = ('.webm', '.mp4', '.mp3', '.avi', '.wav', '.m4v', '.ogg', '.mov')

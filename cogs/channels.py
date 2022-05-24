@@ -16,6 +16,88 @@ class Channels(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Channels Cog Loaded.')
+    
+    @commands.command(aliases = ['ld'],help = "Lockdown the server based on the channels that you have added.")
+    @commands.has_guild_permissions(manage_permissions = True)
+    async def lockdown(self,ctx):
+        ref = db.reference("/",app = firebase_admin._apps['settings'])
+        if ref.child(str(ctx.guild.id)).child("lockdown").get():
+            return await ctx.reply(embed = discord.Embed(description = "This server is already locked!",color = discord.Color.red()))
+        channels = roleid = ref.child(str(ctx.guild.id)).child("lchannels").get()
+        if not channels:
+            return await ctx.reply(embed = discord.Embed(description = "You have no lockdown channels setup!",color = discord.Color.red()))
+        roleid = ref.child(str(ctx.guild.id)).child("drole").get() or None
+        if roleid:
+            try:
+                role = await commands.converter.RoleConverter().convert(ctx,str(roleid))
+            except:
+                return await ctx.reply(embed = discord.Embed(description = "I could not find the role you setup!"))
+        else:
+            role = ctx.guild.default_role
+        error = []
+        message = await ctx.reply(embed = discord.Embed(description = f"Locking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.3}` seconds",color = discord.Color.yellow()))
+        text = ref.child(str(ctx.guild.id)).child("lmessage").get() or "This server has been locked down!"
+        async with ctx.typing():
+            embed = discord.Embed(title = "Server Lockdown",description = text,color = discord.Color.red())
+            for channel in channels:
+                try:
+                    channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
+                    overwrite = channel.overwrites_for(role)
+                    overwrite.send_messages = False
+                    await channel.set_permissions(role, overwrite=overwrite)
+                    await channel.send(embed = embed)
+                    await asyncio.sleep(0.3)
+                except:
+                    error.append(channel)
+        if len(error) >= 1:
+            des = "\n".join([x.mention for x in error])
+            embed = discord.Embed(title = "Server Locked Down",description = f"Could not lock:\n{error}",color = discord.Color.green())
+        else:
+            embed = discord.Embed(title = "Server Locked Down",description = f"All channels successfully locked!",color = discord.Color.green())
+        embed.set_footer(text = "Run [prefix]unlockdown to unlock!")
+        ref.child(str(ctx.guild.id)).child("lockdown").set(True)
+        await message.reply(embed = embed)
+    
+    @commands.command(aliases = ['uld'],help = "End the lockdown on the server based on the channels that you have added.")
+    @commands.has_guild_permissions(manage_permissions = True)
+    async def unlockdown(self,ctx):
+        ref = db.reference("/",app = firebase_admin._apps['settings'])
+        if not ref.child(str(ctx.guild.id)).child("lockdown").get():
+            return await ctx.reply(embed = discord.Embed(description = "This server is not locked down!",color = discord.Color.red()))
+        channels = roleid = ref.child(str(ctx.guild.id)).child("lchannels").get()
+        if not channels:
+            return await ctx.reply(embed = discord.Embed(description = "You have no lockdown channels setup!",color = discord.Color.red()))
+        roleid = ref.child(str(ctx.guild.id)).child("drole").get() or None
+        if roleid:
+            try:
+                role = await commands.converter.RoleConverter().convert(ctx,str(roleid))
+            except:
+                return await ctx.reply(embed = discord.Embed(description = "I could not find the role you setup!"))
+        else:
+            role = ctx.guild.default_role
+        error = []
+        message = await ctx.reply(embed = discord.Embed(description = f"Unlocking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.3}` seconds",color = discord.Color.yellow()))
+        text = ref.child(str(ctx.guild.id)).child("ulmessage").get() or "This server has been unlocked!"
+        async with ctx.typing():
+            embed = discord.Embed(title = "Server Unlocked",description = text,color = discord.Color.red())
+            for channel in channels:
+                try:
+                    channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
+                    overwrite = channel.overwrites_for(role)
+                    overwrite.send_messages = None
+                    await channel.set_permissions(role, overwrite=overwrite)
+                    await channel.send(embed = embed)
+                    await asyncio.sleep(0.3)
+                except:
+                    error.append(channel)
+        if len(error) >= 1:
+            des = "\n".join([x.mention for x in error])
+            embed = discord.Embed(title = "Server Unlocked",description = f"Could not unlock:\n{error}",color = discord.Color.green())
+        else:
+            embed = discord.Embed(title = "Server Unlocked",description = f"All channels successfully unlocked!",color = discord.Color.green())
+        embed.set_footer(text = "Run [prefix]unlockdown to unlock!")
+        ref.child(str(ctx.guild.id)).child("lockdown").set(False)
+        await message.reply(embed = embed)
 
     @commands.command(aliases = ['l'],help ="Lock a specified channel for everyone, or only a certain role.")
     @commands.has_guild_permissions(manage_permissions= True)
@@ -214,7 +296,5 @@ class Channels(commands.Cog):
         await ctx.channel.purge(limit= amount+1)
         await ctx.send(f'Purged {amount} messages!', delete_after = 3)
 
-    
 async def setup(client):
     await client.add_cog(Channels(client))
-

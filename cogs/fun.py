@@ -1,8 +1,10 @@
+from re import L
 import discord
 from discord import ui
 from discord.ext import commands,menus
 import random
 import firebase_admin
+from utils import timing
 from firebase_admin import db
 import asyncio
 import datetime
@@ -61,9 +63,26 @@ class Fun(commands.Cog):
                     "Outlook not so good.",
                     "Very doubtful."]
         self.wordlist = ["claim","grab","oasis","steal","mine","give","clutch","snatch","take","swipe"]
+
     @commands.Cog.listener()
     async def on_ready(self):
         print('Fun Cog Loaded.')
+
+    def eman_role_check():
+        async def predicate(ctx):
+            if ctx.author.guild_permissions.administrator:
+                return True
+            
+            ref = db.reference("/",app = firebase_admin._apps['settings'])
+            emanrole = ref.child(str(ctx.message.guild.id)).child('event').get()
+            emanrole_ob = ctx.message.guild.get_role(emanrole)
+            if emanrole_ob in ctx.message.author.roles:
+                return True
+            else:
+                return False
+            return True
+            
+        return commands.check(predicate)
         
     async def grant_badge(self,ctx,member,badge):
         if not badge in self.badges:
@@ -93,7 +112,6 @@ class Fun(commands.Cog):
             return True
         else:
             return False
-
 
     @commands.command(name = "8ball",aliases=['predictor'],help = 'What does the bot have to say about your question?')
     @commands.cooldown(1, 10,commands.BucketType.user)
@@ -202,6 +220,99 @@ class Fun(commands.Cog):
         await message.reply(embed = discord.Embed(description = f"Claimed by {msg.author.mention} :tada:",color = discord.Color.random()))
         await ctx.reply(embed = discord.Embed(description = f"{ctx.author.mention} your prize was claimed! Please give {item} to {msg.author.mention}",color = discord.Color.green()))
 
+    @commands.command(aliases = ['sos'],help = "Host a giveaway with a split or steal function!")
+    @eman_role_check()
+    async def splitorsteal(self,ctx,time,requirements,*,prize):
+        time = timing.timeparse(time,0,300)
+        if isinstance(time,str):
+            await ctx.reply(embed = discord.Embed(description = time,color = discord.Color.red()))
+        if requirements and requirements.lower() != "none":
+            requirements = requirements.split(";;")
+            req,by,bl = [],[],[]
+            for require in requirements:
+                require = require.split(":")
+                try:
+                    role = await commands.converter.RoleConverter().convert(ctx,require[1])
+                except:
+                    role = None
+                if len(require) != 2 or not role:
+                    return await ctx.reply(embed = discord.Embed(description = "I could not process your requirements!",color = discord.Color.red()))
+                elif require[0].startswith("role"):
+                    req.append(role)
+                elif require[0].startswith("bypass"):
+                    by.append(role)
+                elif require[0].startswith("blacklist"):
+                    bl.append(role)
+        else:
+            req,by,bl = None,None,None
+        view = GiveawayEnter(req,by,bl)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        end = now + time
+        unix = int(end.replace(tzinfo=datetime.timezone.utc).timestamp())
+        time = time.total_seconds()
+        embed = discord.Embed(title = f"Split or Steal For: {prize}",description = f"Ending at: <t:{unix}:f>\nTime Remaining: <t:{unix}:R>\nHosted By: {ctx.author.mention}",color = discord.Color.green())
+        reqbuild = ""
+        if req:
+            reqbuild += "Required Roles:" + ', '.join(role.mention for role in req)
+        if by:
+            reqbuild += "\nBypass Roles:" + ', '.join(role.mention for role in by)
+        if bl:
+            reqbuild += "\nBlacklisted Roles:" + ', '.join(role.mention for role in bl)
+        if reqbuild == "":
+            reqbuild = "None!"
+        embed.add_field(name = "Requirements",value = reqbuild,inline = False)
+        message = await ctx.send(embed = embed,view = view)
+        await ctx.message.delete()
+        await asyncio.sleep(time)
+        view.stop()
+        entrees = view.entered
+        if len(entrees) < 2:
+            embed.description = f"Ended at: <t:{unix}:f>"
+            embed.color = None
+            embed.insert_field_at(0,name = "Winners",value = f"No winners determined\nHosted By: {ctx.author.mention}")
+            view.children[0].disabled = True
+            await message.edit(embed = embed,view = view)
+            return await message.reply(embed = discord.Embed(description = "There were not enough valid entrees!",color = discord.Color.red()))
+        winners = random.sample(entrees,2)
+        embed.description = f"Ended at: <t:{unix}:f>"
+        embed.color = None
+        embed.insert_field_at(0,name = "Winners",value = f"{winners[0].mention} and {winners[1].mention}!\nHosted By: {ctx.author.mention}")
+        view.children[0].disabled = True
+        await message.edit(embed = embed,view = view)
+        embed = discord.Embed(title = "Now is the time to discuss!",description = "You now have 30 seconds to discuss with the other winner! Do it quickly...",color = discord.Color.random())
+        embed.set_footer(text = "The channel will unlock for the winners shortly.")
+        await ctx.send(winners[0].mention + winners[1].mention,embed = embed)
+        overwrite = ctx.channel.overwrites_for(winners[0])
+        overwrite.send_messages = True
+        await ctx.channel.set_permissions(winners[0], overwrite=overwrite)
+        overwrite = ctx.channel.overwrites_for(winners[1])
+        overwrite.send_messages = True
+        await ctx.channel.set_permissions(winners[1], overwrite=overwrite)
+        await asyncio.sleep(25)
+        await ctx.send(embed = discord.Embed(description = "5 seconds remaining!",color = discord.Color.random()))
+        await asyncio.sleep(5)
+        await ctx.channel.set_permissions(winners[0], overwrite=None)
+        await ctx.channel.set_permissions(winners[1], overwrite=None)
+        embed = discord.Embed(title = "Now it is time to decide!",description = "Press the button below to choose.",color = discord.Color.random())
+        embed.set_footer(text = "You have 30 seconds to choose!")
+        view = SplitorSteal(winners)
+        message = await ctx.send(embed = embed,view = view)
+        response = await view.wait()
+        for child in view.children:
+            child.disabled = True
+        await message.edit(view = view)
+        if response:
+            return await message.reply(embed = discord.Embed(description = "The buttons timed out! One or both of the winners did not choose.",color = discord.Color.red()))
+        async with ctx.typing():
+            await asyncio.sleep(3)
+        if view.u1 == "split" and view.u2 == "split":
+            return await message.reply(embed = discord.Embed(description = f"Both **{winners[0].mention}** and **{winners[1].mention}** decide to split. Congrats!",color = discord.Color.green()))
+        if view.u1 == "steal" and view.u2 == "steal":
+            return await message.reply(embed = discord.Embed(description = f"Both **{winners[0].mention}** and **{winners[1].mention}** decide to steal. Bummer!",color = discord.Color.red()))
+        if view.u1 == "steal" and view.u2 == "split":
+            return await message.reply(embed = discord.Embed(description = f"**{winners[0].mention}** decided to steal while **{winners[1].mention}** decide to split. GG!",color = discord.Color.gold()))
+        return await message.reply(embed = discord.Embed(description = f"**{winners[1].mention}** decided to steal while **{winners[0].mention}** decide to split. GG!",color = discord.Color.gold()))
+
     @commands.command(aliases = ['gtn'],help = "Host a guess the number game in the channel.")
     async def guessthenumber(self,ctx,start:int = None,end:int = None,target:int = None,channel:discord.TextChannel = None):
         channel = channel or ctx.channel
@@ -293,7 +404,88 @@ class Fun(commands.Cog):
             loses = fightstats.get("lose",0)
             total = wins + loses
             embed.add_field(name = "Fighting Statistics",value = f"Wins: `{wins}`\nLosses: `{loses}`\nTotal Fights: `{total}`",inline = False)
-        await ctx.reply(embed = embed)     
+        await ctx.reply(embed = embed) 
+
+class GiveawayEnter(discord.ui.View):
+    def __init__(self,req,by,bl):
+        super().__init__()
+        self.req = req
+        self.by = by
+        self.bl = bl
+        self.entered = []
+    
+    async def interaction_check(self, interaction):
+        if interaction.user in self.entered:
+            await interaction.response.send_message(embed = discord.Embed(description = f"You are already entered into this giveaway!",color = discord.Color.red()),ephemeral = True)
+            return False
+        if self.bl:
+            for role in self.bl:
+                if role in interaction.user.roles:
+                    await interaction.response.send_message(embed = discord.Embed(description = f"You are blacklisted due to the {role.mention} role!",color = discord.Color.red()),ephemeral = True)
+                    return False
+        if self.by:
+            for role in self.by:
+                if role in interaction.user.roles:
+                    return True
+        if self.req:
+            for role in self.req:
+                if role not in interaction.user.roles:
+                    await interaction.response.send_message(embed = discord.Embed(description = f"You are missing the {role.mention} role!",color = discord.Color.red()),ephemeral = True)
+                    return False
+        return True
+    
+    @ui.button(label = "Enter!",style = discord.ButtonStyle.green)
+    async def enter(self,interaction,button):
+        self.entered.append(interaction.user)
+        await interaction.response.send_message(embed = discord.Embed(description = f"You have succesfully entered!",color = discord.Color.green()),ephemeral = True)
+
+class SplitorSteal(discord.ui.View):
+    def __init__(self,users):
+        super().__init__(timeout = 30)
+        self.u1 = None
+        self.u2 = None
+        self.users = users
+    
+    async def interaction_check(self, interaction):
+        return interaction.user in self.users
+    
+    async def on_timeout(self):
+        for child in self.children: 
+            child.disabled = True 
+    
+    @ui.button(label = "Split",style = discord.ButtonStyle.blurple)
+    async def split(self,interaction,button):
+        if interaction.user == self.users[0] and not self.u1:
+            await interaction.response.send_message(embed = discord.Embed(description = f"**{interaction.user}** has selected their answer!",color = discord.Color.random()))
+            self.u1 = "split"
+            if self.u2 and self.u1:
+                self.stop()
+        elif interaction.user == self.users[0]:
+            return await interaction.response.send(embed = discord.Embed(description = f"You have already selected your answer!",color = discord.Color.red()))
+        elif interaction.user == self.users[1] and not self.u2:
+            await interaction.response.send_message(embed = discord.Embed(description = f"**{interaction.user}** has selected their answer!",color = discord.Color.random()))
+            self.u2 = "split"
+            if self.u2 and self.u1:
+                self.stop()
+        else:
+            await interaction.response.send_message(embed = discord.Embed(description = f"You have already selected your answer!",color = discord.Color.red()),ephemeral = True)
+
+    @ui.button(label = "Steal",style = discord.ButtonStyle.blurple)
+    async def steal(self,interaction,button):
+        if interaction.user == self.users[0] and not self.u1:
+            await interaction.response.send_message(embed = discord.Embed(description = f"**{interaction.user}** has selected their answer!",color = discord.Color.random()))
+            self.u1 = "steal"
+            if self.u2 and self.u1:
+                self.stop()
+        elif interaction.user == self.users[0]:
+            return await interaction.response.send(embed = discord.Embed(description = f"You have already selected your answer!",color = discord.Color.red()))
+        elif interaction.user == self.users[1] and not self.u2:
+            await interaction.response.send_message(embed = discord.Embed(description = f"**{interaction.user}** has selected their answer!",color = discord.Color.random()))
+            self.u2 = "steal"
+            if self.u2 and self.u1:
+                self.stop()
+        else:
+            await interaction.response.send_message(embed = discord.Embed(description = f"You have already selected your answer!",color = discord.Color.red()),ephemeral = True)
 
 class ColorGame(discord.ui.View):
     def __init__(self,ctx):

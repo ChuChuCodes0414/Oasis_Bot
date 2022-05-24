@@ -5,6 +5,7 @@ import datetime
 import firebase_admin
 from firebase_admin import db
 import asyncio
+import numpy
 
 class Configure(commands.Cog):
     """
@@ -61,6 +62,21 @@ class Configure(commands.Cog):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         guild_settings = ref.child(str(ctx.message.guild.id)).get()
         view = SniperSettings(ctx,guild_settings)
+        embed = await view.generate_embed()
+        message = await ctx.send(embed = embed,view = view)
+        view.message = message
+        timeout = await view.wait()
+        if timeout or view.cancel:
+            return
+        ref.child(str(ctx.message.guild.id)).set(view.guild_settings)
+        await message.reply(embed = discord.Embed(description = "Settings updated!",color = discord.Color.green()))
+
+    @settings.command(help = "Edit all channels settings.")
+    @commands.has_permissions(manage_guild = True)
+    async def channels(self,ctx):
+        ref = db.reference("/",app = firebase_admin._apps['settings'])
+        guild_settings = ref.child(str(ctx.message.guild.id)).get()
+        view = ChannelSettings(ctx,guild_settings)
         embed = await view.generate_embed()
         message = await ctx.send(embed = embed,view = view)
         view.message = message
@@ -864,10 +880,9 @@ class MiscellaneousSettings(discord.ui.View):
         return interaction.user == self.ctx.author
     
     async def generate_embed(self):
-        sprefix,prefix,ilogging,dj,dheistdrole,lottery = self.guild_settings.get("sprefix",None),self.guild_settings.get("prefix",None),self.guild_settings.get("ilogging",None),self.guild_settings.get("dj",None),self.guild_settings.get("dheistdrole",None),self.guild_settings.get("lottery",None)
+        prefix,ilogging,dj,lottery = self.guild_settings.get("prefix",None),self.guild_settings.get("ilogging",None),self.guild_settings.get("dj",None),self.guild_settings.get("lottery",None)
         embed = discord.Embed(title = f"Server Miscellaneous Settings for {self.ctx.guild.name}")
         embed.add_field(name = "Oasis Bot Prefix",value = f"{prefix}")
-        embed.add_field(name = "Serenity Bot Prefix",value = f"{sprefix}")
         if ilogging:
             embed.add_field(name = "Invite Logging Channel",value = f"<#{ilogging}>")
         else:
@@ -876,10 +891,6 @@ class MiscellaneousSettings(discord.ui.View):
             embed.add_field(name = "DJ Role",value = f"<@&{dj}>")
         else:
             embed.add_field(name = "DJ Role",value = f"None")
-        if dheistdrole:
-            embed.add_field(name = "Default Heist Role",value = f"<@&{dheistdrole}>")
-        else:
-            embed.add_field(name = "Default Heist Role",value = f"None")
         if lottery:
             embed.add_field(name = "Lottery Mod Role",value = f"<@&{lottery}>")
         else:
@@ -917,38 +928,6 @@ class MiscellaneousSettings(discord.ui.View):
                 await msg.delete()
                 continue
         self.guild_settings["prefix"] = msg.content
-        embed = await self.generate_embed()
-        await self.message.edit(embed = embed,view = self)
-    
-    @discord.ui.button(label = "Serenity Prefix",style = discord.ButtonStyle.gray)
-    async def setsprefix(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(description = "Input the channel you want to set to the **Serenity Prefix** now!")
-        embed.set_footer(text = "Type \"cancel\" to cancel your input.")
-        await interaction.response.edit_message(embed = embed,view = None)
-
-        def check(message: discord.Message):
-            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
-        while True:
-            try:
-                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
-            except asyncio.TimeoutError:
-                self.value = False
-                self.stop()
-            if msg.content.lower() == "cancel":
-                await msg.delete()
-                embed = await self.generate_embed()
-                await self.message.edit(embed = embed,view = self)
-                return
-            if len(msg.content) < 4 and len(msg.content) > 0:
-                await msg.delete()
-                break
-            else:
-                embed = discord.Embed(description = "Input the role you want to set to the **Serenity Prefix** now!\n\n⚠ Your prefix must be a max of 3 characters!")
-                embed.set_footer(text = "Type \"cancel\" to cancel your input.")
-                await self.message.edit(embed = embed)
-                await msg.delete()
-                continue
-        self.guild_settings["sprefix"] = msg.content
         embed = await self.generate_embed()
         await self.message.edit(embed = embed,view = self)
     
@@ -1036,48 +1015,6 @@ class MiscellaneousSettings(discord.ui.View):
         embed = await self.generate_embed()
         await self.message.edit(embed = embed,view = self)
     
-    @discord.ui.button(label = "Default Heist Role",style = discord.ButtonStyle.gray)
-    async def setdheistdrole(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(description = "Input the role you want to set to the **Default Heist Role** now!")
-        embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
-        await interaction.response.edit_message(embed = embed,view = None)
-
-        def check(message: discord.Message):
-            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
-        while True:
-            try:
-                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
-            except asyncio.TimeoutError:
-                self.value = False
-                self.stop()
-            if msg.content.lower() == "cancel":
-                await msg.delete()
-                embed = await self.generate_embed()
-                await self.message.edit(embed = embed,view = self)
-                return
-            if msg.content.lower() == "remove":
-                await msg.delete()
-                try:
-                    self.guild_settings.pop("dheistdrole")
-                except:
-                    pass
-                embed = await self.generate_embed()
-                await self.message.edit(embed = embed,view = self)
-                return
-            try:
-                role = await commands.converter.RoleConverter().convert(self.ctx,msg.content)
-                await msg.delete()
-                break
-            except:
-                embed = discord.Embed(description = "Input the role you want to set to the **Default Heist Role** now!\n\n⚠ I could not process your input!")
-                embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
-                await self.message.edit(embed = embed)
-                await msg.delete()
-                continue
-        self.guild_settings["dheistdrole"] = role.id
-        embed = await self.generate_embed()
-        await self.message.edit(embed = embed,view = self)
-    
     @discord.ui.button(label = "Lottery Mod Role",style = discord.ButtonStyle.gray)
     async def setlottery(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(description = "Input the role you want to set to the **Lottery Mod Role** now!")
@@ -1117,6 +1054,209 @@ class MiscellaneousSettings(discord.ui.View):
                 await msg.delete()
                 continue
         self.guild_settings["lottery"] = role.id
+        embed = await self.generate_embed()
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label = "✅ Confirm",style = discord.ButtonStyle.green,row = 2)
+    async def confirm(self,interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
+        self.stop()
+
+    @discord.ui.button(label = "❌ Cancel",style = discord.ButtonStyle.red,row = 2)
+    async def cancel(self,interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
+        self.cancel = True
+        self.stop()
+
+class ChannelSettings(discord.ui.View):
+    def __init__(self,ctx,guild_settings):
+        super().__init__(timeout = 120)
+        self.ctx = ctx
+        self.guild_settings = guild_settings
+        self.cancel = False
+        self.message = None
+
+    async def on_timeout(self):
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self)
+    
+    async def interaction_check(self, interaction):
+        return interaction.user == self.ctx.author
+
+    async def generate_embed(self):
+        drole,channels,lmessage,ulmessage = self.guild_settings.get("drole",None),self.guild_settings.get("lchannels",[]),self.guild_settings.get("lmessage","This server has been locked down!"),self.guild_settings.get("ulmessage","This server has been unlocked!")
+        embed = discord.Embed(title = f"Server Channels Settings for {self.ctx.guild.name}")
+        if drole:
+            embed.add_field(name = "Default Role",value = f"<@&{drole}>")
+        else:
+            embed.add_field(name = "Default Role",value = f"None")
+        if len(channels) > 0:
+            embed.add_field(name = "Lockdown Channels",value = f"{len(channels)} Channels")
+        else:
+            embed.add_field(name = "Lockdown Channels",value = "None")
+        embed.add_field(name = "Default Lockdown Message",value = lmessage,inline = False)
+        embed.add_field(name = "Default Unlockdown Message",value = ulmessage,inline = False)
+        embed.set_footer(text = "Use the menu buttons below to configure server settings.")
+        return embed
+    
+    @discord.ui.button(label = "Default Role",style = discord.ButtonStyle.gray)
+    async def setdrole(self,interaction:discord.Interaction,button:discord.ui.Button):
+        embed = discord.Embed(description = "Input the role you want to set to the **Default Role** now!")
+        embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            if msg.content.lower() == "remove":
+                await msg.delete()
+                try:
+                    self.guild_settings.pop("drole")
+                except:
+                    pass
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            try:
+                role = await commands.converter.RoleConverter().convert(self.ctx,msg.content)
+                await msg.delete()
+                break
+            except:
+                embed = discord.Embed(description = "Input the role you want to set to the **Default Role** now!\n\n⚠ I could not process your input!")
+                embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+                await self.message.edit(embed = embed)
+                await msg.delete()
+                continue
+        self.guild_settings["drole"] = role.id
+        embed = await self.generate_embed()
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label='Lockdown Channels',style = discord.ButtonStyle.gray)
+    async def setlchannels(self, interaction: discord.Interaction, button: discord.ui.Button):
+        view = SetupChannels(self.ctx,self.guild_settings.get("lchannels",[]),self.message,"Lockdown")
+        embed = await view.formatchannelsembed()
+        if len(self.guild_settings.get("lchannels",[])) >= 50:
+            view.children[0].disabled = True
+        await interaction.response.edit_message(embed = embed,view = view)
+        timeout = await view.wait()
+        if timeout:
+            for child in self.children: 
+                child.disabled = True   
+            await self.message.edit(view=self) 
+        self.guild_settings["lchannels"] = view.channels
+        embed = await self.generate_embed()
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label = "Default Lockdown Message",style = discord.ButtonStyle.gray)
+    async def setlmessage(self,interaction:discord.Interaction,button:discord.ui.Button):
+        embed = discord.Embed(description = "Input the text you want to set to the **Default Lockdown Message** now!")
+        embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            if msg.content.lower() == "remove":
+                await msg.delete()
+                try:
+                    self.guild_settings.pop("lmessage")
+                except:
+                    pass
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            try:
+                text = str(msg.content)
+                if len(text) >= 500:
+                    embed = discord.Embed(description = "Input the text you want to set to the **Default Lockdown Message** now!\n\n⚠ The maximum character limit is 500 characters!")
+                    embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+                    await self.message.edit(embed = embed)
+                    await msg.delete()
+                    continue
+                await msg.delete()
+                break
+            except:
+                embed = discord.Embed(description = "Input the text you want to set to the **Default Lockdown Message** now!\n\n⚠ I could not process your input!")
+                embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+                await self.message.edit(embed = embed)
+                await msg.delete()
+                continue
+        self.guild_settings["lmessage"] = text
+        embed = await self.generate_embed()
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label = "Default Unlockdown Message",style = discord.ButtonStyle.gray)
+    async def setulmessage(self,interaction:discord.Interaction,button:discord.ui.Button):
+        embed = discord.Embed(description = "Input the text you want to set to the **Default Unlockdown Message** now!")
+        embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            if msg.content.lower() == "remove":
+                await msg.delete()
+                try:
+                    self.guild_settings.pop("ulmessage")
+                except:
+                    pass
+                embed = await self.generate_embed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            try:
+                text = str(msg.content)
+                if len(text) >= 500:
+                    embed = discord.Embed(description = "Input the text you want to set to the **Default Unlockdown Message** now!\n\n⚠ The maximum character limit is 500 characters!")
+                    embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+                    await self.message.edit(embed = embed)
+                    await msg.delete()
+                    continue
+                await msg.delete()
+                break
+            except:
+                embed = discord.Embed(description = "Input the text you want to set to the **Default Unlockdown Message** now!\n\n⚠ I could not process your input!")
+                embed.set_footer(text = "Type \"cancel\" to cancel your input, or \"remove\" to remove what you currently have setup.")
+                await self.message.edit(embed = embed)
+                await msg.delete()
+                continue
+        self.guild_settings["ulmessage"] = text
         embed = await self.generate_embed()
         await self.message.edit(embed = embed,view = self)
     
@@ -1235,6 +1375,133 @@ class SetupRoles(discord.ui.View):
         self.roles.remove(role.id)
         embed = await self.formatrolesembed()
         if len(self.roles) >= 5:
+            self.children[0].disabled = True
+        else:
+            self.children[0].disabled = False
+        await self.message.edit(embed = embed,view = self)
+
+    @discord.ui.button(label='Save', style= discord.ButtonStyle.green,row = 1)
+    async def savemethods(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        self.stop()
+
+class SetupChannels(discord.ui.View):
+    def __init__(self,ctx,channels,message,type):
+        super().__init__()
+        self.ctx = ctx
+        self.channels = channels
+        self.message = message
+        self.type = type
+    
+    async def interaction_check(self, interaction):
+        """Only allow the author that invoke the command to be able to use the interaction"""
+        return interaction.user == self.ctx.author
+    
+    async def formatchannelsembed(self):
+        embed = discord.Embed(title = f"{self.type} Channels Settings")
+        res = ""
+        if len(self.channels) > 0:
+            for channel in self.channels:
+               res += f"<#{channel}>\n"
+            embed.description = res
+        else:
+            embed.description = "No current roles defined!"
+        embed.set_footer(text = "Use the buttons below to continue.")
+        return embed
+    
+    @discord.ui.button(label='Add Channel', style= discord.ButtonStyle.green)
+    async def addchannel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(description = "Type in your channel now! You can also input a category id to add that entire category.")
+        embed.set_footer(text = "Type \"cancel\" to cancel input.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.formatchannelsembed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            try:
+                channel = await commands.converter.TextChannelConverter().convert(self.ctx,msg.content)
+                self.channels.append(channel.id)
+            except:
+                try:
+                    category = await commands.converter.CategoryChannelConverter().convert(self.ctx,msg.content)
+                    channels = category.text_channels
+                    if len(channels) + len(self.channels) > 50:
+                        embed = discord.Embed(description = "Type in your channel now! You can also input a category id to add that entire category.\n\n⚠ Adding this category exceeds the limit of 50 channels!")
+                        embed.set_footer(text = "Type \"cancel\" to cancel input.")
+                        await self.message.edit(embed = embed)
+                        await msg.delete()
+                        continue
+                    else:
+                        self.channels.extend([x.id for x in channels])
+                except:
+                    embed = discord.Embed(description = "Type in your channel now! You can also input a category id to add that entire category.\n\n⚠ I could not process your input!")
+                    embed.set_footer(text = "Type \"cancel\" to cancel input.")
+                    await self.message.edit(embed = embed)
+                    await msg.delete()
+                    continue
+            await msg.delete()
+            break
+        self.channels = numpy.unique(self.channels)
+        if isinstance(self.channels, numpy.ndarray):
+            self.channels =  self.channels.tolist()
+        embed = await self.formatchannelsembed()
+        if len(self.channels) >= 50:
+            self.children[0].disabled = True
+        await self.message.edit(embed = embed,view = self)
+    
+    @discord.ui.button(label='Remove Channel', style= discord.ButtonStyle.red)
+    async def removechannel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = discord.Embed(description = "Type in your channel to remove now! You can also type in a category id to remove that entire category.")
+        embed.set_footer(text = "Type \"cancel\" to cancel input.")
+        await interaction.response.edit_message(embed = embed,view = None)
+
+        def check(message: discord.Message):
+            return message.author.id == self.ctx.author.id and message.channel.id == self.ctx.channel.id
+        while True:
+            try:
+                msg = await interaction.client.wait_for("message",timeout = 60.0,check=check)
+            except asyncio.TimeoutError:
+                self.value = False
+                self.stop()
+            if msg.content.lower() == "cancel":
+                await msg.delete()
+                embed = await self.formatchannelsembed()
+                await self.message.edit(embed = embed,view = self)
+                return
+            try:
+                channel = await commands.converter.TextChannelConverter().convert(self.ctx,msg.content)
+                if channel.id not in self.channels:
+                    embed = discord.Embed(description = "Type in your role now! You can also type in a category id to remove that entire category.\n\n⚠ That channel is not in the current list!")
+                    embed.set_footer(text = "Type \"cancel\" to cancel input.")
+                    await self.message.edit(embed = embed)
+                    await msg.delete()
+                    continue
+                self.channels.remove(channel.id)
+            except:
+                try:
+                    category = await commands.converter.CategoryChannelConverter().convert(self.ctx,msg.content)
+                    channels = category.text_channels
+                    self.channels = [channel for channel in self.channels if channel not in [x.id for x in channels]]
+                except:
+                    embed = discord.Embed(description = "Type in your channel now! You can also type in a category id to remove that entire category.\n\n⚠ I could not process your input!")
+                    embed.set_footer(text = "Type \"cancel\" to cancel input.")
+                    await self.message.edit(embed = embed)
+                    await msg.delete()
+                    continue
+            await msg.delete()
+            break
+        embed = await self.formatchannelsembed()
+        if len(self.channels) >= 50:
             self.children[0].disabled = True
         else:
             self.children[0].disabled = False
