@@ -24,7 +24,6 @@ class Fight(commands.Cog):
     async def on_ready(self):
         print('Fight Cog Loaded.')
 
-    
     async def get_items(self,ctx,member):
         ref = db.reference("/",app = firebase_admin._apps['profile'])
         current = ref.child(str(member)).child("badges").get()
@@ -140,7 +139,7 @@ class Fight(commands.Cog):
             for child in view.children[:-1]:
                 child.style = discord.ButtonStyle.blurple
             view.children[-2].label = names[0]
-            if names[0] not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher"]:
+            if names[0] not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher","Party Hat"]:
                 view.children[-2].disabled = True
             embed = discord.Embed(title = "The fight begins!",description = f"**{ctx.author}** is fighting **{user}**",color = discord.Color.random())
             embed.set_footer(text = f"It is currently {ctx.author}'s turn to choose! They have 30 seconds.")
@@ -149,7 +148,7 @@ class Fight(commands.Cog):
             for child in view.children[:-1]:
                 child.style = discord.ButtonStyle.red
             view.children[-2].label = names[1]
-            if names[1] not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher"]:
+            if names[1] not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher","Party Hat"]:
                 view.children[-2].disabled = True
             embed = discord.Embed(title = "The fight begins!",description = f"**{user}** is fighting **{ctx.author}**",color = discord.Color.random())
             embed.set_footer(text = f"It is currently {user}'s turn to choose! They have 30 seconds.")
@@ -250,7 +249,7 @@ class FightView(discord.ui.View):
             self.oppose = temp
             item = self.fightstats[self.current][0]
             self.children[-2].label = item
-            if item not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher"]:
+            if item not in ["Sword","Axe","Armor","Crossbow","Rocket Launcher","Party Hat"]:
                 self.children[-2].disabled = True
             else:
                 self.children[-2].disabled = False
@@ -376,6 +375,16 @@ class FightView(discord.ui.View):
                 damage = random.randint(40,60)
                 description = f"**{self.current}** launched their rocket, and it blew up next to **{self.oppose}**! The explosion dealt `{damage}`, is this weapon broken?"
             await self.process_action(interaction,damage,kickback,0,description)
+        elif button.label == "Party Hat":
+            if failrate <= 20:
+                kickback = random.randint(80,100)
+                damage = 0
+                description = f"**{self.current}** tried to use their **party hat** and have a party, but no one showed up. They cried interally and suffered `{kickback}` damage."
+            else:
+                kickback = 0
+                damage = random.randint(40,50)
+                description = f"**{self.current}** used their **party hat**, had a great time! **{self.oppose}** was jealous and suffered `{damage}`. Nice party!"
+            await self.process_action(interaction,damage,kickback,0,description)
         
     @ui.button(label= 'End Fight', style=discord.ButtonStyle.gray,row = 0)
     async def end(self, interaction, button):
@@ -384,8 +393,6 @@ class FightView(discord.ui.View):
         await self.message.edit(f"**{interaction.user}** ended the fight! What a coward.",view=self) 
         await interaction.response.send_message(embed = discord.Embed(description = f"**{interaction.user}** ended the fight! What a coward.",color = discord.Color.red()))
         self.stop()
-    
-
 
 class Items(ui.Select):
     def __init__(self,users):
@@ -399,6 +406,7 @@ class Items(ui.Select):
             discord.SelectOption(label='Armor (Active)', description='Instead of attacking, put on some armor!', emoji='<:PB_armor:865759592259256361>'),
             discord.SelectOption(label='Crossbow (Active)', description='A reliable ranged weapon, only for the worthy.', emoji='<:PB_crossbow:878828750811312138>'),
             discord.SelectOption(label='Rocket Launcher (Active)', description='A weapon ahead of its time, but where to get one?', emoji='<:PB_rocketlauncher:878829510294925362>'),
+            discord.SelectOption(label ='Party Hat (Active)(Limited)',description='A limited time item for the 1st anniversary of Oasis Bot!', emoji = '<:partyhat:979380159868203048>')
         ]
         self.message = None
         self.chosen = [None,None]

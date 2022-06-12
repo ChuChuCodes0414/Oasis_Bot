@@ -46,10 +46,6 @@ lottery_app = firebase_admin.initialize_app(cred_obj_lottery , {
     'databaseURL':sensitive.LOTTERY_LINK
     },name="lottery")
 
-cred_obj_bans = sensitive.CRED_OBJ_BANS
-bans_app = firebase_admin.initialize_app(cred_obj_bans , {
-    'databaseURL':sensitive.BANS_LINK
-    },name="bans")
 
 class Client(commands.Bot):
     def __init__(self):
@@ -94,6 +90,10 @@ client = Client()
 
 @client.check
 def global_check(ctx):
+    ref1 = db.reference("/",app = firebase_admin._apps['profile'])
+    bl = ref1.child(str(ctx.author.id)).child("blacklist").get()
+    if bl:
+        return False
     ref = db.reference("/",app = firebase_admin._apps['settings'])
     settings = ref.child(str(ctx.guild.id)).child("rules").child(ctx.command.name).get()
     if not settings:

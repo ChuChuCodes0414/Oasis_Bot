@@ -1,7 +1,7 @@
 import datetime
 import discord
 
-def timeparse(duration,maxdays,maxseconds):
+def timeparse(duration,maxdays = None,maxseconds = None):
     success = True
     c = ""
     hours = 0
@@ -27,7 +27,8 @@ def timeparse(duration,maxdays,maxseconds):
     if c != "" or not success:
         return 'I could not parse your timing input!\n\nValid Time Inputs:\n`w` - weeks\n`d` - days\n`h` - hours\n`m` - minutes\n`s` - seconds\n\nExamples: `2w`, `2h30m`, `10s`'
     added = datetime.timedelta(hours = hours,seconds = seconds)
-    max = datetime.timedelta(days = maxdays,seconds= maxseconds)
-    if added > max:
-        return f"Your time duration goes over the maximum time!"
+    if maxdays and maxseconds:
+        max = datetime.timedelta(days = maxdays,seconds= maxseconds)
+        if added > max:
+            return f"Your time duration goes over the maximum time!"
     return added

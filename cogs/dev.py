@@ -4,6 +4,7 @@ import datetime
 import firebase_admin
 from firebase_admin import db
 import asyncio
+from utils import timing
 
 class Dev(commands.Cog):
     def __init__(self,client):
@@ -21,17 +22,17 @@ class Dev(commands.Cog):
     async def post_recap(self):
         sortedcomm = sorted(self.commands, key=self.commands.get, reverse=True)
         commres = ""
-        x = max(len(self.commands),10)
+        x = min(len(self.commands),10)
         for command in sortedcomm[:x]:
             commres += f"**{command}:** {self.commands[command]} uses\n"
         sortedusers = sorted(self.users, key=self.users.get, reverse=True)
         userres = ""
-        x = max(len(self.users),10)
+        x = min(len(self.users),10)
         for user in sortedusers[:x]:
             userres += f"**{user}:** {self.users[user]} commands\n"
         sortedguilds = sorted(self.guilds,key = self.guilds.get,reverse = True)
         guildsres = ""
-        x = max(len(self.guilds),10)
+        x = min(len(self.guilds),10)
         for guild in sortedguilds[:x]:
             guildsres += f"**{guild.name}** {self.guilds[guild]} commands\n"
         now = discord.utils.utcnow()
@@ -51,11 +52,52 @@ class Dev(commands.Cog):
     def cog_unload(self):
         self.some_task.cancel()
 
+    async def log_blacklist(self,user,reason,mod = None,until = None):
+        if until:
+            embed = discord.Embed(title = "Logging User Blacklist",description = f"Blacklisted until <t:{until}:f> (<t:{until}:R>)")
+            embed.add_field(name = "User",value = f"<@{user}> (`{user}`)",inline = False)
+            embed.add_field(name = "Reason",value = reason,inline = False)
+            embed.add_field(name = "Action Taken By",value = f"<@{mod}> (`{mod}`)")
+            embed.timestamp = datetime.datetime.now()
+        else:
+            embed = discord.Embed(title = "Logging User Unblacklist")
+            embed.add_field(name = "User",value = f"<@{user}> (`{user}`)",inline = False)
+            embed.add_field(name = "Reason",value = reason,inline = False)
+            if mod:
+                embed.add_field(name = "Action Taken By",value = f"<@{mod}> (`{mod}`)")
+            else:
+                embed.add_field(name = "Action Taken By",value = f"Automatically")
+            embed.timestamp = datetime.datetime.now()
+        channel = self.client.get_channel(int(978029124243292210))
+        await channel.send(embed = embed)
+    
     @commands.Cog.listener()
     async def on_command_completion(self,ctx):
         self.commands[ctx.command.name] = self.commands.get(ctx.command.name,0) + 1
         self.users[ctx.author] = self.users.get(ctx.author,0) + 1
         self.guilds[ctx.guild] = self.guilds.get(ctx.guild,0) + 1
+        ref = db.reference("/",app = firebase_admin._apps['profile'])
+        badgelist = ref.child(str(ctx.author.id)).child("badges").get() or []
+        if "1y" not in badgelist:
+            badgelist.append("1y")
+            ref.child(str(ctx.author.id)).child("badges").set(badgelist)
+    
+    @commands.Cog.listener()
+    async def on_command(self,ctx):
+        ref1 = db.reference("/",app = firebase_admin._apps['profile'])
+        bl = ref1.child(str(ctx.author.id)).child("blacklist").get()
+        if bl:
+            now = int(discord.utils.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp()) 
+            if now < bl['until']:
+                embed = discord.Embed(title = "⚠ You are currently bot blacklisted!",description = f"You have been blacklisted until <t:{bl['until']}:f> (<t:{bl['until']}:R>)",color = discord.Color.red())
+                embed.add_field(name = "Reason",value = bl.get("reason","None given"),inline = False)
+                embed.add_field(name = "Appealing",value = "You can appeal this blacklist in the support channel in the [support server](https://discord.com/invite/9pmGDc8pqQ)")
+                await ctx.reply(embed = embed)
+            else:
+                ref1.child(str(ctx.author.id)).child("blacklist").delete()
+                embed = discord.Embed(title = "Your bot blacklist is now over!",description = f"You have been automatically unblacklisted. Please be sure to follow the rules carefully! Repeated blacklists may result in your permanent ban from the bot.",color = discord.Color.green())
+                await ctx.reply(embed = embed)
+                await self.log_blacklist(ctx.author.id,reason = "Automatic Unblacklist")
     
     @commands.Cog.listener()
     async def on_message(self,message):
@@ -136,17 +178,17 @@ class Dev(commands.Cog):
     async def recap(self,ctx):
         sortedcomm = sorted(self.commands, key=self.commands.get, reverse=True)
         commres = ""
-        x = max(len(self.commands),10)
+        x = min(len(self.commands),10)
         for command in sortedcomm[:x]:
             commres += f"**{command}:** {self.commands[command]} uses\n"
         sortedusers = sorted(self.users, key=self.users.get, reverse=True)
         userres = ""
-        x = max(len(self.users),10)
+        x = min(len(self.users),10)
         for user in sortedusers[:x]:
             userres += f"**{user}:** {self.users[user]} commands\n"
         sortedguilds = sorted(self.guilds,key = self.guilds.get,reverse = True)
         guildsres = ""
-        x = max(len(self.guilds),10)
+        x = min(len(self.guilds),10)
         for guild in sortedguilds[:x]:
             guildsres += f"**{guild.name}** {self.guilds[guild]} commands\n"
         now = discord.utils.utcnow()
@@ -156,6 +198,53 @@ class Dev(commands.Cog):
         embed.add_field(name = "Users",value = userres or "None")
         embed.add_field(name = "Guilds",value = guildsres or "None")
         await ctx.reply(embed = embed)
+
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def blacklist(self,ctx,time:str,user:discord.User,*,reason = None):
+        time = timing.timeparse(time)
+        if isinstance(time,str):
+            return await ctx.reply(embed = discord.Embed(description  = time,color = discord.Color.red()))
+        ref = db.reference("/",app = firebase_admin._apps['profile'])
+        if ref.child(str(user.id)).child("blacklist").get():
+            return await ctx.reply(embed = discord.Embed(description = "This user is already blacklisted!",color = discord.Color.red()))
+        until = discord.utils.utcnow() + time
+        unix = int(until.replace(tzinfo=datetime.timezone.utc).timestamp())
+        ref.child(str(user.id)).child("blacklist").set({"until":unix,"reason":reason or "None"})
+        try:
+            dm = user.dm_channel
+            if dm == None:
+                dm = await user.create_dm()
+            embed = discord.Embed(title = "You have been bot blacklisted!",description = f"You have been blacklisted until <t:{unix}:f> (<t:{unix}:R>)")
+            embed.add_field(name = "Reason",value = reason or "None",inline = False)
+            embed.add_field(name = "Appealing",value = "You can appeal this blacklist in the support channel in the [support server](https://discord.com/invite/9pmGDc8pqQ)")
+            await dm.send(embed = embed)
+            embed = discord.Embed(title = "User Blacklisted!",description = f"Blacklisted {user.mention} (`{user.id}`) until <t:{unix}:f> (<t:{unix}:R>)\n\nReason: {reason}")
+            await ctx.reply(embed = embed)
+        except:
+            await ctx.reply(title = "User Blacklisted!",description = f"Blacklisted {user.mention} (`{user.id}`) until <t:{unix}:f> (<t:{unix}:R>)\n\nReason: {reason}\n\nI could not dm the user!")
+        await self.log_blacklist(user.id,reason or "None Given",ctx.author.id,unix)
+    
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def unblacklist(self,ctx,user:discord.User,*,reason = None):
+        ref = db.reference("/",app = firebase_admin._apps['profile'])
+        if not ref.child(str(user.id)).child("blacklist").get():
+            return await ctx.reply(embed = discord.Embed(description = "This user is not blacklisted!",color = discord.Color.red()))
+        ref.child(str(user.id)).child("blacklist").delete()
+        try:
+            dm = user.dm_channel
+            if dm == None:
+                dm = await user.create_dm()
+            embed = discord.Embed(title = "You have been bot unblacklisted!",description = f"You have been unblacklisted! Please be sure to take careful note of bot rules.")
+            embed.add_field(name = "Reason",value = reason or "None",inline = False)
+            await dm.send(embed = embed)
+            embed = discord.Embed(title = "User Unblacklisted!",description = f"Unlacklisted {user.mention} (`{user.id}`)\n\nReason: {reason}")
+            await ctx.reply(embed = embed)
+        except:
+            await ctx.reply(title = "User Blacklisted!",description = f"Unblacklisted {user.mention} (`{user.id}`)\n\nReason: {reason}\n\nI could not dm the user!")
+        await self.log_blacklist(user.id,reason or "None Given",ctx.author.id)
+
 
     @commands.command(hidden=True)
     @commands.is_owner()

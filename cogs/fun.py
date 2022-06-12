@@ -1,6 +1,6 @@
 from re import L
 import discord
-from discord import ui
+from discord import ui, app_commands
 from discord.ext import commands,menus
 import random
 import firebase_admin
@@ -28,7 +28,8 @@ class Fun(commands.Cog):
                         "iq":"<:IQBadge:870129049232637992> **IQ**\nThis person somehow got the maximum IQ score possible. That's a 1/2000 chance!",
                         "8ball":"<:8ballBadge:870129771122671627> **8ball**\nAnd the bot says...`yes`.",
                         "nab":"<:NabBadge:870130999500095549> **Nab**\nThis person got the maximum nabrate...but it's only a 1/100 chance. Must mean this person is a nab.",
-                        "color":"<:ColorBadge:912893729482883142> **Color Game**\nThis person got to level 20 in the color game...pretty good memory"
+                        "color":"<:ColorBadge:912893729482883142> **Color Game**\nThis person got to level 20 in the color game...pretty good memory",
+                        "1y":"<:1yBadge:979206493377294396> **One Year**\nThis person used the bot during the 2.0.2 Anniversary Update!"
                     }
         self.roasts = ["Light travels faster than sound, that's why you seemed bright until you spoke",
                         "I would explain whats going wrong with you, but I forgot my english-to-dumbass dictionary at home",
@@ -62,7 +63,8 @@ class Fun(commands.Cog):
                     "My sources say no.",
                     "Outlook not so good.",
                     "Very doubtful."]
-        self.wordlist = ["claim","grab","oasis","steal","mine","give","clutch","snatch","take","swipe"]
+        self.wordlist = ["claim","grab","serenity","steal","mine","give","clutch","snatch","take","swipe"]
+        super().__init__()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -405,6 +407,38 @@ class Fun(commands.Cog):
             total = wins + loses
             embed.add_field(name = "Fighting Statistics",value = f"Wins: `{wins}`\nLosses: `{loses}`\nTotal Fights: `{total}`",inline = False)
         await ctx.reply(embed = embed) 
+    
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def sync(self,ctx):
+        response = await self.client.tree.sync()
+        await ctx.send(str(response))
+        await ctx.reply("Synced")
+    
+    @app_commands.command(name="commandrequest",description = "Request a custom command!")
+    async def requestcommand(self, interaction: discord.Interaction) -> None:
+        ref = db.reference("/",app = firebase_admin._apps['profile'])
+        if ref.child(str(interaction.user.id)).child("commandrequest").get():
+            return await interaction.response.send_message(embed = discord.Embed(description = "You have already requested a custom command!",color = discord.Color.red()),ephemeral = True)
+        embed = discord.Embed(title = "Request a custom command!",description = "As a part of the first anniversary of Oasis Bot, you can now request a custom command! Please read *carefully* for instructions.",color = discord.Color.random())
+        embed.add_field(name = "What can I request?",value = "You can basically request any simple command, which can respond however you choose. The functionality, however, should be limited and simple. This could include a simple phrase response, image, button press, etc.",inline = False)
+        embed.add_field(name = "Where will my custom command be?",value = "Your custom command will be in a hidden category, and must be in the form of a command (beginning with the bot prefix). Your command cannot be a slash command.",inline = False)
+        embed.add_field(name = "What is the request process?",value = "When you are ready, click the button below to get started. You can then fill out a command name, and then what your command should do! You can also include some reasons for your custom command. The developer will then review your request, and then make a decision. Note that you can only make one request, so make it count!",inline = False)
+        embed.add_field(name = "How long will the command stay?",value = "As long as your command does not cause issues, it will stay for as long as the bot is up!",inline = False)
+        embed.add_field(name = "Disclaimed",value = "The Oasis and Serenity Bot team reserve the right to deny or alter your request, and may choose to remove your command whenver deemed fit. By filling out this form, you agree to turn over this command idea to the development team and allow its use on any bot run by the team. Any troll submissions will result in your blacklist from the bot, which can be permanent.",inline = False)
+        embed.set_footer(text = "Click the button below to get started!")
+        view = CommandRequestConfirm()
+        await interaction.response.send_message(embed = embed, view = view, ephemeral = True)
+        await view.wait()
+
+class CommandRequestConfirm(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout = 60)
+ 
+    @ui.button(label = "Start Request Form",style = discord.ButtonStyle.green)
+    async def enter(self,interaction,button):
+        await interaction.response.send_modal(CustomCommand())
+        self.stop()
 
 class GiveawayEnter(discord.ui.View):
     def __init__(self,req,by,bl):
@@ -577,6 +611,22 @@ class ColorGame(discord.ui.View):
         await interaction.response.defer()
         self.value = False
         self.stop()
+
+class CustomCommand(discord.ui.Modal,title = "Custom Command Request!"):
+    name = discord.ui.TextInput(label = "Command Name",placeholder="Short, one word name for your command...",max_length = 15)
+    description = discord.ui.TextInput(label = "Command Description",style = discord.TextStyle.long,placeholder = "Describe what your command should do here!",max_length = 400)
+    reason = discord.ui.TextInput(label = "Why should I add your command?",style = discord.TextStyle.long,placeholder = "Give a few reasons why your command is interesting...",max_length = 400,required = False)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(978481339437305897)
+        embed = discord.Embed(title = "Command Request Sent!",description = f"{interaction.user.mention} | {interaction.user} (`{interaction.user.id}`)")
+        embed.add_field(name = "Command Name",value = self.name.value)
+        embed.add_field(name = "Command Description",value = self.description.value,inline = False)
+        embed.add_field(name = "Command Reasoning",value = self.reason.value,inline = False)
+        await channel.send(embed = embed)
+        ref = db.reference("/",app = firebase_admin._apps['profile'])
+        ref.child(str(interaction.user.id)).child("commandrequest").set(True)
+        await interaction.response.send_message(embed = discord.Embed(description = f'Thank you for your request! It has been sent to the developer.',color = discord.Color.random()), ephemeral=True)
 
 async def setup(client):
     await client.add_cog(Fun(client))
