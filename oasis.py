@@ -46,6 +46,10 @@ lottery_app = firebase_admin.initialize_app(cred_obj_lottery , {
     'databaseURL':sensitive.LOTTERY_LINK
     },name="lottery")
 
+cred_obj_hoyoverse = sensitive.CRED_OBJ_HOYOVERSE
+hoyoverse_app = firebase_admin.initialize_app(cred_obj_hoyoverse , {
+    'databaseURL':sensitive.HOYOVERSE_LINK
+    },name="hoyoverse")
 
 class Client(commands.Bot):
     def __init__(self):
@@ -90,6 +94,8 @@ client = Client()
 
 @client.check
 def global_check(ctx):
+    if ctx.author.id != 570013288977530880 and client.maintenance:
+        return False
     ref1 = db.reference("/",app = firebase_admin._apps['profile'])
     bl = ref1.child(str(ctx.author.id)).child("blacklist").get()
     if bl:

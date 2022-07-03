@@ -7,6 +7,7 @@ import math
 import datetime
 import uuid
 import os
+import genshin
 
 class LoggingError(commands.Cog):
     def __init__(self,client):
@@ -117,7 +118,30 @@ class LoggingError(commands.Cog):
         if isinstance(error,discord.Forbidden):
             await self.send_error_embed(ctx,"Looks like I am missing permissions to complete your command.")
             return
-
+        
+        if isinstance(error,genshin.errors.DataNotPublic):
+            await self.send_error_embed(ctx,"This user's profile is not set to public!")
+            return
+            
+        if isinstance(error,genshin.errors.RedemptionClaimed):
+            await self.send_error_embed(ctx,"This code is already redeemed for this account!")
+            return
+        
+        if isinstance(error,genshin.errors.RedemptionInvalid):
+            await self.send_error_embed(ctx,"That does not seem like a valid redeem code!")
+            return
+        
+        if isinstance(error,genshin.errors.AuthkeyTimeout):
+            await self.send_error_embed(ctx,"This user's authkey has timed out!\nIf you are this user, you can regenerate your authkey and reenter it with `[prefix]hoyolab setup`.")
+            return
+        
+        if isinstance(error,genshin.errors.AlreadyClaimed):
+            await self.send_error_embed(ctx,"The daily reward for this user has already been claimed!")
+            return
+        
+        if isinstance(error,genshin.errors.GenshinException):
+            await self.send_error_embed(ctx,error.msg)
+            return
 
         embed = discord.Embed(title = "Uh oh! Seems like you got an uncaught excpetion.",description = "I have no idea how you got here, but it seems your error was not traced! If this occurs frequently, please feel free to join the [support server](https://discord.com/invite/9pmGDc8pqQ) and report the bug!",color = discord.Color.red())
         if len(''.join(traceback.format_exception_only(type(error), error))) < 4000:
@@ -136,10 +160,11 @@ class LoggingError(commands.Cog):
         # ignore all other exception types, but print them to stderr
         if self.client.user.id == 830817370762248242:
             channel = self.client.get_channel(int(850553146421149756))
+        elif self.client.user.id == 752335987761217576:
+            channel = self.client.get_channel(int(908467248719605763))
         else:
             channel = self.client.get_channel(int(975508813929119764))
             
-
         embed = discord.Embed(title = f'⚠ There was an error that was not traced!',description = f'On Command: {ctx.command.name}',color = discord.Color.red())
         embed.add_field(name = "Command Invoke Details",value = f'**Guild Info:** {ctx.guild.name} ({ctx.guild.id})\n**User Information:** {ctx.author.name} | {ctx.author.mention} ({ctx.author.id})\n**Jump URL:** {ctx.message.jump_url}\n**Command Used:** {ctx.message.content}\n**Error ID:** {errorid}',inline = False)
         errordetails = ''.join(traceback.format_exception(type(error), error, error.__traceback__))

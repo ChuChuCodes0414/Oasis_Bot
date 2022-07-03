@@ -43,7 +43,7 @@ class Status(commands.Cog):
         embed = discord.Embed(title=f"{self.client.user.name}",description=f"Bot Information", color=discord.Color.random())
         embed.add_field(name="Name", value=f"{self.client.user.name}", inline=True) 
         embed.add_field(name="Creator", value=f"ChuGames#0001", inline=True)
-        embed.add_field(name="Current Version", value=f"2.0.2", inline=False)
+        embed.add_field(name="Current Version", value=f"2.0.3", inline=False)
         embed.add_field(name="Description", value=f"A helpful bot with a variety of features, from private channels to mod logging. Ping the bot to find out the prefix!", inline=False)
         embed.add_field(name="Server Count", value=f"{len(self.client.guilds)} servers", inline=False)
         embed.add_field(name="Member Count", value=f"{len(self.client.users)} members", inline=False)

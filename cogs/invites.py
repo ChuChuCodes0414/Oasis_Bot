@@ -296,7 +296,7 @@ class InviteTracker():
         if invite.guild.id not in self._cache.keys():
             return
         ref_invite = self._cache[invite.guild.id][invite.code]
-        if (ref_invite.created_at.timestamp()+ref_invite.max_age > datetime.now().timestamp() or ref_invite.max_age == 0) and ref_invite.max_uses > 0 and ref_invite.uses == ref_invite.max_uses-1:
+        if (ref_invite.created_at.timestamp()+ref_invite.max_age > datetime.datetime.now().timestamp() or ref_invite.max_age == 0) and ref_invite.max_uses > 0 and ref_invite.uses == ref_invite.max_uses-1:
             try:
                 async for entry in invite.guild.audit_logs(limit=1, action=AuditLogAction.invite_delete):
                     if entry.target.code != invite.code:

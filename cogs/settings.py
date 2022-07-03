@@ -1152,7 +1152,7 @@ class ChannelSettings(discord.ui.View):
     async def setlchannels(self, interaction: discord.Interaction, button: discord.ui.Button):
         view = SetupChannels(self.ctx,self.guild_settings.get("lchannels",[]),self.message,"Lockdown")
         embed = await view.formatchannelsembed()
-        if len(self.guild_settings.get("lchannels",[])) >= 50:
+        if len(self.guild_settings.get("lchannels",[])) >= 250:
             view.children[0].disabled = True
         await interaction.response.edit_message(embed = embed,view = view)
         timeout = await view.wait()
@@ -1405,7 +1405,7 @@ class SetupChannels(discord.ui.View):
                res += f"<#{channel}>\n"
             embed.description = res
         else:
-            embed.description = "No current roles defined!"
+            embed.description = "No current channels defined!"
         embed.set_footer(text = "Use the buttons below to continue.")
         return embed
     
@@ -1435,8 +1435,8 @@ class SetupChannels(discord.ui.View):
                 try:
                     category = await commands.converter.CategoryChannelConverter().convert(self.ctx,msg.content)
                     channels = category.text_channels
-                    if len(channels) + len(self.channels) > 50:
-                        embed = discord.Embed(description = "Type in your channel now! You can also input a category id to add that entire category.\n\n⚠ Adding this category exceeds the limit of 50 channels!")
+                    if len(channels) + len(self.channels) > 250:
+                        embed = discord.Embed(description = "Type in your channel now! You can also input a category id to add that entire category.\n\n⚠ Adding this category exceeds the limit of 250 channels!")
                         embed.set_footer(text = "Type \"cancel\" to cancel input.")
                         await self.message.edit(embed = embed)
                         await msg.delete()
@@ -1455,7 +1455,7 @@ class SetupChannels(discord.ui.View):
         if isinstance(self.channels, numpy.ndarray):
             self.channels =  self.channels.tolist()
         embed = await self.formatchannelsembed()
-        if len(self.channels) >= 50:
+        if len(self.channels) >= 250:
             self.children[0].disabled = True
         await self.message.edit(embed = embed,view = self)
     
@@ -1501,7 +1501,7 @@ class SetupChannels(discord.ui.View):
             await msg.delete()
             break
         embed = await self.formatchannelsembed()
-        if len(self.channels) >= 50:
+        if len(self.channels) >= 250:
             self.children[0].disabled = True
         else:
             self.children[0].disabled = False

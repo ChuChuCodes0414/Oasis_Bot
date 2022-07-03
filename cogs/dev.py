@@ -76,14 +76,13 @@ class Dev(commands.Cog):
         self.commands[ctx.command.name] = self.commands.get(ctx.command.name,0) + 1
         self.users[ctx.author] = self.users.get(ctx.author,0) + 1
         self.guilds[ctx.guild] = self.guilds.get(ctx.guild,0) + 1
-        ref = db.reference("/",app = firebase_admin._apps['profile'])
-        badgelist = ref.child(str(ctx.author.id)).child("badges").get() or []
-        if "1y" not in badgelist:
-            badgelist.append("1y")
-            ref.child(str(ctx.author.id)).child("badges").set(badgelist)
     
     @commands.Cog.listener()
     async def on_command(self,ctx):
+        if self.client.maintenance and ctx.author.id != 570013288977530880:
+            embed = discord.Embed(title = "⚠ The bot is currently in maintenance!",description = f"Please refrain from running commands at this time. Information can be found in the [support server](https://discord.com/invite/9pmGDc8pqQ).",color = discord.Color.yellow())
+            embed.timestamp = discord.utils.utcnow()
+            await ctx.reply(embed = embed)
         ref1 = db.reference("/",app = firebase_admin._apps['profile'])
         bl = ref1.child(str(ctx.author.id)).child("blacklist").get()
         if bl:
@@ -245,6 +244,15 @@ class Dev(commands.Cog):
             await ctx.reply(title = "User Blacklisted!",description = f"Unblacklisted {user.mention} (`{user.id}`)\n\nReason: {reason}\n\nI could not dm the user!")
         await self.log_blacklist(user.id,reason or "None Given",ctx.author.id)
 
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def maintenance(self,ctx,option:str):
+        if option == "on":
+            self.client.maintenance = True
+            await ctx.reply("maintenance on!")
+        else:
+            self.client.maintenance = False
+            await ctx.reply("maintenance off!")
 
     @commands.command(hidden=True)
     @commands.is_owner()

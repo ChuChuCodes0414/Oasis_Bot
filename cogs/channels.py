@@ -19,7 +19,8 @@ class Channels(commands.Cog):
     
     @commands.command(aliases = ['ld'],help = "Lockdown the server based on the channels that you have added.")
     @commands.has_guild_permissions(manage_permissions = True)
-    async def lockdown(self,ctx):
+    @commands.cooldown(1, 20,commands.BucketType.user)
+    async def lockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if ref.child(str(ctx.guild.id)).child("lockdown").get():
             return await ctx.reply(embed = discord.Embed(description = "This server is already locked!",color = discord.Color.red()))
@@ -35,10 +36,22 @@ class Channels(commands.Cog):
         else:
             role = ctx.guild.default_role
         error = []
+        view = ConfirmationView(ctx)
+        message = await ctx.reply(embed = discord.Embed(description = f"Are you sure you want to lockdown {len(channels)} channels for {role.mention}?",color = discord.Color.random()),view = view)
+        view.message = message
+        result = await view.wait()
+        for child in view.children:
+            child.disabled = True
+        await message.edit(view = view)
+        if result:
+            return await message.reply(embed = discord.Embed(description = "Request timed out! Cancelling lockdown...",color = discord.Color.red()))
+        if not view.value:
+            return await message.reply(embed = discord.Embed(description = "Alright then, as you wish. Cancelling lockdown...",color = discord.Color.red()))
         message = await ctx.reply(embed = discord.Embed(description = f"Locking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.3}` seconds",color = discord.Color.yellow()))
-        text = ref.child(str(ctx.guild.id)).child("lmessage").get() or "This server has been locked down!"
+        text = text or ref.child(str(ctx.guild.id)).child("lmessage").get() or "This server has been locked down!"
         async with ctx.typing():
             embed = discord.Embed(title = "Server Lockdown",description = text,color = discord.Color.red())
+            embed.timestamp = discord.utils.utcnow()
             for channel in channels:
                 try:
                     channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
@@ -54,13 +67,15 @@ class Channels(commands.Cog):
             embed = discord.Embed(title = "Server Locked Down",description = f"Could not lock:\n{error}",color = discord.Color.green())
         else:
             embed = discord.Embed(title = "Server Locked Down",description = f"All channels successfully locked!",color = discord.Color.green())
+        embed.timestamp = discord.utils.utcnow()
         embed.set_footer(text = "Run [prefix]unlockdown to unlock!")
         ref.child(str(ctx.guild.id)).child("lockdown").set(True)
         await message.reply(embed = embed)
     
     @commands.command(aliases = ['uld'],help = "End the lockdown on the server based on the channels that you have added.")
     @commands.has_guild_permissions(manage_permissions = True)
-    async def unlockdown(self,ctx):
+    @commands.cooldown(1, 20,commands.BucketType.user)
+    async def unlockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if not ref.child(str(ctx.guild.id)).child("lockdown").get():
             return await ctx.reply(embed = discord.Embed(description = "This server is not locked down!",color = discord.Color.red()))
@@ -76,10 +91,22 @@ class Channels(commands.Cog):
         else:
             role = ctx.guild.default_role
         error = []
+        view = ConfirmationView(ctx)
+        message = await ctx.reply(embed = discord.Embed(description = f"Are you sure you want to unlockdown {len(channels)} channels for {role.mention}?",color = discord.Color.random()),view = view)
+        view.message = message
+        result = await view.wait()
+        for child in view.children:
+            child.disabled = True
+        await message.edit(view = view)
+        if result:
+            return await message.reply(embed = discord.Embed(description = "Request timed out! Cancelling unlockdown...",color = discord.Color.red()))
+        if not view.value:
+            return await message.reply(embed = discord.Embed(description = "Alright then, as you wish. Cancelling unlockdown...",color = discord.Color.red()))
         message = await ctx.reply(embed = discord.Embed(description = f"Unlocking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.3}` seconds",color = discord.Color.yellow()))
-        text = ref.child(str(ctx.guild.id)).child("ulmessage").get() or "This server has been unlocked!"
+        text = text or ref.child(str(ctx.guild.id)).child("ulmessage").get() or "This server has been unlocked!"
         async with ctx.typing():
-            embed = discord.Embed(title = "Server Unlocked",description = text,color = discord.Color.red())
+            embed = discord.Embed(title = "Server Unlocked",description = text,color = discord.Color.green())
+            embed.timestamp = discord.utils.utcnow()
             for channel in channels:
                 try:
                     channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
@@ -95,8 +122,119 @@ class Channels(commands.Cog):
             embed = discord.Embed(title = "Server Unlocked",description = f"Could not unlock:\n{error}",color = discord.Color.green())
         else:
             embed = discord.Embed(title = "Server Unlocked",description = f"All channels successfully unlocked!",color = discord.Color.green())
+        embed.timestamp = discord.utils.utcnow()
         embed.set_footer(text = "Run [prefix]unlockdown to unlock!")
         ref.child(str(ctx.guild.id)).child("lockdown").set(False)
+        await message.reply(embed = embed)
+    
+    @commands.command(aliases = ['vld'],help = "View lockdown the server based on the channels that you have added.",brief = "Removes view access to channels for the role you setup.")
+    @commands.has_guild_permissions(manage_permissions = True)
+    @commands.cooldown(1, 20,commands.BucketType.user)
+    async def viewlockdown(self,ctx,*,text:str = None):
+        ref = db.reference("/",app = firebase_admin._apps['settings'])
+        if ref.child(str(ctx.guild.id)).child("vlockdown").get():
+            return await ctx.reply(embed = discord.Embed(description = "This server is already view locked!",color = discord.Color.red()))
+        channels = roleid = ref.child(str(ctx.guild.id)).child("lchannels").get()
+        if not channels:
+            return await ctx.reply(embed = discord.Embed(description = "You have no lockdown channels setup!",color = discord.Color.red()))
+        roleid = ref.child(str(ctx.guild.id)).child("drole").get() or None
+        if roleid:
+            try:
+                role = await commands.converter.RoleConverter().convert(ctx,str(roleid))
+            except:
+                return await ctx.reply(embed = discord.Embed(description = "I could not find the role you setup!"))
+        else:
+            role = ctx.guild.default_role
+        error = []
+        view = ConfirmationView(ctx)
+        message = await ctx.reply(embed = discord.Embed(description = f"Are you sure you want to view lockdown {len(channels)} channels for {role.mention}?",color = discord.Color.random()),view = view)
+        view.message = message
+        result = await view.wait()
+        for child in view.children:
+            child.disabled = True
+        await message.edit(view = view)
+        if result:
+            return await message.reply(embed = discord.Embed(description = "Request timed out! Cancelling view lockdown...",color = discord.Color.red()))
+        if not view.value:
+            return await message.reply(embed = discord.Embed(description = "Alright then, as you wish. Cancelling view lockdown...",color = discord.Color.red()))
+        message = await ctx.reply(embed = discord.Embed(description = f"Locking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.5}` seconds",color = discord.Color.yellow()))
+        text = text or ref.child(str(ctx.guild.id)).child("lmessage").get() or "This server has been locked down!"
+        async with ctx.typing():
+            embed = discord.Embed(title = "View Server Lockdown",description = text,color = discord.Color.red())
+            embed.timestamp = discord.utils.utcnow()
+            for channel in channels:
+                try:
+                    channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
+                    overwrite = channel.overwrites_for(role)
+                    overwrite.view_channel = False
+                    await channel.set_permissions(role, overwrite=overwrite)
+                    await channel.send(embed = embed)
+                    await asyncio.sleep(0.5)
+                except:
+                    error.append(channel)
+        if len(error) >= 1:
+            des = "\n".join([x.mention for x in error])
+            embed = discord.Embed(title = "Server View Locked Down",description = f"Could not lock:\n{error}",color = discord.Color.green())
+        else:
+            embed = discord.Embed(title = "Server View Locked Down",description = f"All channels successfully locked!",color = discord.Color.green())
+        embed.timestamp = discord.utils.utcnow()
+        embed.set_footer(text = "Run [prefix]viewunlockdown to unlock!")
+        ref.child(str(ctx.guild.id)).child("vlockdown").set(True)
+        await message.reply(embed = embed)
+    
+    @commands.command(aliases = ['vuld'],help = "Remove the view lockdown the server based on the channels that you have added.",brief = "Allows view access to channels for the role you setup.")
+    @commands.has_guild_permissions(manage_permissions = True)
+    @commands.cooldown(1, 20,commands.BucketType.user)
+    async def viewunlockdown(self,ctx,*,text:str = None):
+        ref = db.reference("/",app = firebase_admin._apps['settings'])
+        if not ref.child(str(ctx.guild.id)).child("vlockdown").get():
+            return await ctx.reply(embed = discord.Embed(description = "This server is not view locked!",color = discord.Color.red()))
+        channels = roleid = ref.child(str(ctx.guild.id)).child("lchannels").get()
+        if not channels:
+            return await ctx.reply(embed = discord.Embed(description = "You have no lockdown channels setup!",color = discord.Color.red()))
+        roleid = ref.child(str(ctx.guild.id)).child("drole").get() or None
+        if roleid:
+            try:
+                role = await commands.converter.RoleConverter().convert(ctx,str(roleid))
+            except:
+                return await ctx.reply(embed = discord.Embed(description = "I could not find the role you setup!"))
+        else:
+            role = ctx.guild.default_role
+        error = []
+        view = ConfirmationView(ctx)
+        message = await ctx.reply(embed = discord.Embed(description = f"Are you sure you want to view unlockdown {len(channels)} channels for {role.mention}?",color = discord.Color.random()),view = view)
+        view.message = message
+        result = await view.wait()
+        for child in view.children:
+            child.disabled = True
+        await message.edit(view = view)
+        if result:
+            return await message.reply(embed = discord.Embed(description = "Request timed out! Cancelling view unlockdown...",color = discord.Color.red()))
+        if not view.value:
+            return await message.reply(embed = discord.Embed(description = "Alright then, as you wish. Cancelling view unlockdown...",color = discord.Color.red()))
+        message = await ctx.reply(embed = discord.Embed(description = f"Unlocking {len(channels)} channels for {role.mention}\nETA: `{len(channels)*0.5}` seconds",color = discord.Color.yellow()))
+        text = text or ref.child(str(ctx.guild.id)).child("ulmessage").get() or "This server has been view unlocked!"
+        async with ctx.typing():
+            embed = discord.Embed(title = "View Server Unlockdown",description = text,color = discord.Color.green())
+            embed.timestamp = discord.utils.utcnow()
+            for channel in channels:
+                try:
+                    channel = await commands.converter.TextChannelConverter().convert(ctx,str(channel))
+                    overwrite = channel.overwrites_for(role)
+                    overwrite.view_channel = None
+                    await channel.set_permissions(role, overwrite=overwrite)
+                    await channel.send(embed = embed)
+                    await asyncio.sleep(0.5)
+                except:
+                    error.append(channel)
+        if len(error) >= 1:
+            des = "\n".join([x.mention for x in error])
+            embed = discord.Embed(title = "Server View Unlocked",description = f"Could not view unlock:\n{error}",color = discord.Color.green())
+        else:
+            embed = discord.Embed(title = "Server View Unlocked",description = f"All channels successfully view unlocked!",color = discord.Color.green())
+        embed.set_footer(text = "Run [prefix]viewunlockdown to unlock!")
+        embed.timestamp = discord.utils.utcnow()
+        ref.child(str(ctx.guild.id)).child("vlockdown").set(False)
         await message.reply(embed = embed)
 
     @commands.command(aliases = ['l'],help ="Lock a specified channel for everyone, or only a certain role.")
@@ -295,6 +433,32 @@ class Channels(commands.Cog):
     async def purge(self,ctx, amount:int):
         await ctx.channel.purge(limit= amount+1)
         await ctx.send(f'Purged {amount} messages!', delete_after = 3)
+
+class ConfirmationView(discord.ui.View):
+    def __init__(self,ctx):
+        super().__init__(timeout = 60)
+        self.ctx = ctx
+        self.value = None
+        self.message = None
+
+    
+    async def interaction_check(self, interaction):
+        if interaction.user == self.ctx.author:
+            return True
+        interaction.response.send_message(embed = discord.Embed(description = "This menu is not for you!",color = discord.Color.red()))
+        return False
+
+    @discord.ui.button(emoji = "✅",style = discord.ButtonStyle.green)
+    async def confirm(self,interaction:discord.Interaction,button:discord.ui.Button):
+        await interaction.response.defer()
+        self.value = True
+        self.stop()
+    
+    @discord.ui.button(emoji = "✖",style = discord.ButtonStyle.red)
+    async def deny(self,interaction:discord.Interaction,button:discord.ui.Button):
+        await interaction.response.defer()
+        self.value = False
+        self.stop()
 
 async def setup(client):
     await client.add_cog(Channels(client))
