@@ -1,5 +1,5 @@
 import discord
-from discord import ui
+from discord import ui, app_commands
 from discord.ext import commands, menus
 from itertools import starmap, chain
 import firebase_admin
@@ -66,15 +66,21 @@ class Hoyoverse(commands.Cog):
         member = member or ctx.author
         data = await self.get_cookies(ctx,member)
         if not data:
-            await ctx.reply(embed = discord.Embed(description = "User has not setup their account information!\nIf you are this user, use `[prefix]hoyolab setup` to get started.",color = discord.Color.red()))
+            await ctx.reply(embed = discord.Embed(description = "User has not setup their cookies information!\nIf you are this user, use `[prefix]hoyolab setup` to get started.",color = discord.Color.red()))
             return False
         if member != ctx.author and await self.privacy_check(member) != "public":
             await ctx.reply(embed = discord.Embed(description = "User has not set their information to public!",color = discord.Color.red()))
             return False
         return data
 
-    @commands.command(help = "Rules for this section of the bot.")
-    async def hoyoverserules(self,ctx):
+    @commands.hybrid_group(name = "hoyolab", help = "Managing account setup, and basic user commands.")
+    async def hoyolab(self,ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help hoyolab` to get a list of commands.",color = discord.Color.red())
+            await ctx.reply(embed = embed)
+    
+    @hoyolab.command(name = "rules",help = "Rules for this section of the bot.")
+    async def rules(self,ctx):
         embed = discord.Embed(title = "Cookies Information and Terms of Service",description = "By continuing to input cookies or use the Hoyoverse commands, you agree to these rules outlined below.")
         embed.add_field(name = "1. General Bot Rules",value = "You agree, as a user, that you will abide by all rules outlined in the `[p]rules` command.",inline = False)
         embed.add_field(name = "2. API Abuse",value = "You will not continually request uneeded data. Once hitting the rate limit, you will not continue to run commands.",inline = False)
@@ -83,15 +89,10 @@ class Hoyoverse(commands.Cog):
         embed.add_field(name = "5. Staff Discretion",value = "The Oasis Bot team has the final right to interpreting these rules, and handing out punishments respectively.",inline = False)
         embed.set_footer(text = "You agree to these terms by using this section of the bot.")
         await ctx.reply(embed = embed)
-
-    @commands.group(help = "Managing account setup, and basic user commands.")
-    async def hoyolab(self,ctx):
-        if ctx.invoked_subcommand is None:
-            embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help hoyolab` to get a list of commands.",color = discord.Color.red())
-            await ctx.reply(embed = embed)
     
     @hoyolab.command(help = "Search for a user on hoyolab with a name.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(username = "The username to search for on hoyolab.")
     async def search(self,ctx,username:str):
         message = await ctx.reply(embed = discord.Embed(description = "Searching for a user...please standby.",color = discord.Color.random()))
         users = await self.standardclient.search_users(username)
@@ -105,6 +106,7 @@ class Hoyoverse(commands.Cog):
 
     @hoyolab.command(help = "Get the profile for a user on hoyolab.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(hoyolabid = "The Hoyolab ID on the user profile to search for.")
     async def profile(self,ctx,hoyolabid:int):
         message = await ctx.reply(embed = discord.Embed(description = "Searching for a user...please standby.",color = discord.Color.random()))
         account = await self.standardclient.get_record_card(hoyolabid)
@@ -112,8 +114,9 @@ class Hoyoverse(commands.Cog):
         embed.add_field(name = "Genshin Stats",value = "\n".join([x.name + ": " + x.value for x in account.data]))
         await message.edit(embed = embed)
 
-    @hoyolab.command(help = "Get game accounts associated with a discord user.",brief = "User set cookies required for this command.")
+    @hoyolab.command(help = "Get game accounts associated with a discord user.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check accounts.")
     async def accounts(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -130,14 +133,14 @@ class Hoyoverse(commands.Cog):
                 embed.add_field(name = "Honkai Impact 3rd",value = f"UID: {account.uid}\nLevel: {account.level}\nNickname: {account.nickname}\nServer: {account.server_name}")
         await message.edit(embed = embed)
     
-    @hoyolab.command(help = "Setup cookies, privacy, and other settings.",brief = "This is required for most functions dealing with your account.")
+    @hoyolab.command(help = "Setup cookies, privacy, and other settings.")
     async def setup(self,ctx):
         view = HoyoverseSetupView(ctx,self.public)
         embed = await view.generate_embed()
         message = await ctx.reply(embed = embed,view = view)
         view.message = message
 
-    @hoyolab.command(help = "Remove all data related to you from the bot.",brief = "Includes removing cookies, privacy settings.")
+    @hoyolab.command(help = "Remove all data related to you from the bot.")
     async def remove(self,ctx):
         ref = db.reference("/",app = firebase_admin._apps['hoyoverse'])
         if ref.child(str(ctx.author.id)).get():
@@ -146,14 +149,15 @@ class Hoyoverse(commands.Cog):
         else:
             await ctx.reply(embed= discord.Embed(description = f"I do not have data stored for {ctx.author.mention}!",color = discord.Color.red()))
         
-    @commands.group(help = "All Genshin Impact related commands")
+    @commands.hybrid_group(help = "All Genshin Impact related commands")
     async def genshin(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help genshin` to get a list of commands.",color = discord.Color.red())
             await ctx.reply(embed = embed)
         
-    @genshin.command(help = "Overview statistics like achievement count and days active.",brief = "User set cookies required for this command.")
+    @genshin.command(name = "stats",help = "Overview statistics like achievement count and days active.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def stats(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -182,8 +186,9 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed, view = view)
         view.message = message
 
-    @genshin.command(aliases = ['sa'],help = "Get sprial abyss statistics.",brief = "User set cookies required for this command.")
+    @genshin.command(aliases = ['sa'],help = "Get sprial abyss statistics.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def spiralabyss(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -205,8 +210,9 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed,view = view)
         view.message = message
 
-    @genshin.command(aliases = ['rtn'],help = "Get real-time notes information.",brief = "User set cookies required for this command.")
+    @genshin.command(aliases = ['rtn'],help = "Get real-time notes information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def realtimenotes(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -259,8 +265,9 @@ class Hoyoverse(commands.Cog):
             embed.add_field(name = "Expeditions",value = f"None",inline = False)
         await message.edit(embed = embed)
 
-    @genshin.command(help = "Redeem a code for yourself.",brief = "User set mihoyo cookies required for this command.")
+    @genshin.command(help = "Redeem a code for yourself.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to redeem a code for.")
     async def redeem(self,ctx,code:str,member:discord.Member = None):
         member = member or ctx.author
         data = await self.get_mihoyo_cookies(ctx,member)
@@ -273,14 +280,15 @@ class Hoyoverse(commands.Cog):
         await client.redeem_code(code)
         await message.edit(embed = discord.Embed(description = f"Redeemed `{code}` for the account belonging to **{member}**! Please check your in game mail for more details.",color = discord.Color.green()))
     
-    @genshin.group(help = "Genshin daily checkin management.",brief = "User set cookies required for this command.")
+    @genshin.group(help = "Genshin daily checkin management.")
     async def daily(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help genshin daily` to get a list of commands.",color = discord.Color.red())
             await ctx.reply(embed = embed)
     
-    @daily.command(help = "Claim the dailies reward for the day.",brief = "User set cookies required for thie command.")
+    @daily.command(help = "Claim the dailies reward for the day.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to claim dailies for.")
     async def claim(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -290,11 +298,13 @@ class Hoyoverse(commands.Cog):
         client = genshin.Client(data)
         reward = await client.claim_daily_reward(game = genshin.Game.GENSHIN)
         embed = discord.Embed(title = "Claimed daily reward!",description = f"Claimed {reward.amount}x{reward.name}",color = discord.Color.green())
+        embed.set_footer(text = "Rewards have been sent to your account inbox!")
         embed.set_thumbnail(url = reward.icon)
         await message.edit(embed = embed)
     
-    @daily.command(help = "Last 30 daily reward history information.",brief = "User set cookies required for this command.")
+    @daily.command(help = "Last 30 daily reward history information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def history(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         member = member or ctx.author
@@ -309,14 +319,16 @@ class Hoyoverse(commands.Cog):
         embed = discord.Embed(title = f"Last 30 Daily Reward Claimed for {member}",description = build,color = discord.Color.random())
         await message.edit(embed = embed)
     
-    @genshin.group(help = "Genshin Traveler Diary commands.",brief = "User set cookies required for this command.")
+    @genshin.group(help = "Genshin Traveler Diary commands.")
     async def diary(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help genshin diary` to get a list of commands.",color = discord.Color.red())
             await ctx.reply(embed = embed)
 
-    @diary.command(help = "View your monthly traveler diary information.",brief = "User set cookies required for this command.")
+    @diary.command(help = "View your monthly traveler diary information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
+    @app_commands.describe(month = "The month you are looking for, to be inputted as a number.")
     async def overview(self,ctx,month:int = None,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -325,7 +337,7 @@ class Hoyoverse(commands.Cog):
         message = await ctx.reply(embed = discord.Embed(description = "Fetching user information...please standby.",color = discord.Color.random()))
         client = genshin.Client(data)
         diary = await client.get_diary(month = month)
-        embed = discord.Embed(title = f"Traveler Diary Information for {self.months[diary.month]}",description = f"{diary.nickname} | {diary.uid} | {diary.region}",color = discord.Color.random())
+        embed = discord.Embed(title = f"Traveler Diary Information for {self.months[diary.month]}",description = f"{diary.nickname} | {diary.uid} | {diary.server}",color = discord.Color.random())
         if diary.month == datetime.datetime.now().month:
             embed.add_field(name = "Today's Data",value = f"Primogems Earned: {diary.day_data.current_primogems}\nMora Earned: {diary.day_data.current_mora}",inline = False)
         embed.add_field(name = "Month Total",value = f"Total Primogems: {diary.data.current_primogems}\nPercentage Change from Last Month: {diary.data.primogems_rate}%\nTotal Mora: {diary.data.current_mora}\nPercentage Change from Last Month: {diary.data.mora_rate}%",inline = False)
@@ -333,8 +345,9 @@ class Hoyoverse(commands.Cog):
         embed.add_field(name = "Primogem Breakdown",value = f"{categories}",inline = False)
         await message.edit(embed = embed)
     
-    @diary.command(help = "View the primogem earning logs.",brief = "User set cookies required for this command")
+    @diary.command(help = "View the primogem earning logs.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def primogem(self,ctx,limit:int = None,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -350,11 +363,11 @@ class Hoyoverse(commands.Cog):
             data.append(action)
         formatter = DiaryLogPageSource(data,"Primogem")
         menu = DiaryLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
     
-    @diary.command(help = "View the mora earning logs.",brief = "User set cookies required for this command")
+    @diary.command(help = "View the mora earning logs.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def mora(self,ctx,limit:int = None,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -370,11 +383,11 @@ class Hoyoverse(commands.Cog):
             data.append(action)
         formatter = DiaryLogPageSource(data,"Mora")
         menu = DiaryLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
 
-    @genshin.command(help = "View player character data",brief = "User set cookies required for this command")
+    @genshin.command(help = "View player character data")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def characters(self,ctx,member:discord.Member = None):
         member = member or ctx.author
         data = await self.general_check(ctx,member)
@@ -390,8 +403,9 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed,view = view)
         view.message = message
     
-    @genshin.command(help = "View wishing data",brief = "User set authkey required for this command")
+    @genshin.command(help = "View wishing data")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def wishes(self,ctx,limit:int = 2000,member:discord.Member = None):
         member = member or ctx.author
         authkey = await self.get_auth_key(ctx,member)
@@ -428,14 +442,15 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed,view = view)
         view.message = message
     
-    @genshin.group(aliases = ["t"],help = "View Genshin transactions for items like primogems.",brief = "User set authkey required for this command.")
+    @genshin.group(aliases = ["t"],help = "View Genshin transactions for items like primogems.")
     async def transactions(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help genshin transactions` to get a list of commands.",color = discord.Color.red())
             await ctx.reply(embed = embed)
 
-    @transactions.command(help = "View Genshin transactions for primogems.",brief = "User set authkey required for this command.")
+    @transactions.command(help = "View Genshin transactions for primogems.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def primogems(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
         if limit <= 0:
@@ -450,11 +465,11 @@ class Hoyoverse(commands.Cog):
         log = await self.standardclient.transaction_log(authkey = authkey, kind = "primogem", limit=limit).flatten()
         formatter = TransactionLogPageSource(log,"Primogems")
         menu = TransactionLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
     
-    @transactions.command(help = "View Genshin transactions for crystals.",brief = "User set authkey required for this command.")
+    @transactions.command(help = "View Genshin transactions for crystals.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def crystals(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
         if limit <= 0:
@@ -469,11 +484,11 @@ class Hoyoverse(commands.Cog):
         log = await self.standardclient.transaction_log(authkey = authkey, kind = "crystal", limit=limit).flatten()
         formatter = TransactionLogPageSource(log,"Crystals")
         menu = TransactionLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
     
-    @transactions.command(help = "View Genshin transactions for resin.",brief = "User set authkey required for this command.")
+    @transactions.command(help = "View Genshin transactions for resin.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def resin(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
         if limit <= 0:
@@ -488,11 +503,11 @@ class Hoyoverse(commands.Cog):
         log = await self.standardclient.transaction_log(authkey = authkey, kind = "resin", limit=limit).flatten()
         formatter = TransactionLogPageSource(log,"Resin")
         menu = TransactionLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
     
-    @transactions.command(help = "View Genshin transactions for artifacts.",brief = "User set authkey required for this command.")
+    @transactions.command(help = "View Genshin transactions for artifacts.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def artifacts(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
         if limit <= 0:
@@ -507,11 +522,11 @@ class Hoyoverse(commands.Cog):
         log = await self.standardclient.transaction_log(authkey = authkey, kind = "artifact", limit=limit).flatten()
         formatter = TransactionLogPageSource(log,"Artifacts")
         menu = TransactionLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
     
-    @transactions.command(help = "View Genshin transactions for weapons.",brief = "User set authkey required for this command.")
+    @transactions.command(help = "View Genshin transactions for weapons.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def weapons(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
         if limit <= 0:
@@ -526,8 +541,7 @@ class Hoyoverse(commands.Cog):
         log = await self.standardclient.transaction_log(authkey = authkey, kind = "weapon", limit=limit).flatten()
         formatter = TransactionLogPageSource(log,"Weapon")
         menu = TransactionLogMenuPages(formatter)
-        await message.delete()
-        await menu.start(ctx)
+        await menu.start(message,ctx)
 
 class HoyoverseSetupView(discord.ui.View):
     def __init__(self,ctx,key):
@@ -569,6 +583,7 @@ class HoyoverseSetupView(discord.ui.View):
         embed.add_field(name = "Privacy",value = settings.get('gprivacy',None))
         embed.add_field(name = "Wish Privacy",value = settings.get('wprivacy',None))
         embed.add_field(name = "Transaction Privacy",value = settings.get('tprivacy',None))
+        embed.add_field(name = "Tutorial Video",value = "[YouTube Link](https://youtu.be/4H9dulf2-zQ)",inline = False)
         embed.set_footer(text = "Use the menu buttons below to configure user settings.")
         return embed
     
@@ -916,14 +931,15 @@ class DiaryLogMenuPages(ui.View, menus.MenuPages):
         super().__init__(timeout=60)
         self._source = source
         self.current_page = 0
-        self.ctx = None
         self.message = None
+        self.ctx = None
         self.delete_message_after = False
 
-    async def start(self, ctx, *, channel=None, wait=False):
+    async def start(self, message,ctx):
         await self._source._prepare_once()
+        self.message = message
         self.ctx = ctx
-        self.message = await self.send_initial_message(ctx, ctx.message)
+        self.message = await self.send_initial_message(self.message)
 
     async def _get_kwargs_from_page(self, page):
         value = await super()._get_kwargs_from_page(page)
@@ -931,10 +947,10 @@ class DiaryLogMenuPages(ui.View, menus.MenuPages):
             value.update({'view': self})
         return value
     
-    async def send_initial_message(self, ctx, message):
+    async def send_initial_message(self, message):
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
-        return await message.reply(**kwargs)
+        return await message.edit(**kwargs)
     
     async def on_timeout(self):
         for child in self.children: 
@@ -1117,10 +1133,11 @@ class TransactionLogMenuPages(ui.View, menus.MenuPages):
         self.message = None
         self.delete_message_after = False
 
-    async def start(self, ctx, *, channel=None, wait=False):
+    async def start(self, message,ctx):
         await self._source._prepare_once()
+        self.message = message
         self.ctx = ctx
-        self.message = await self.send_initial_message(ctx, ctx.message)
+        self.message = await self.send_initial_message(self.message)
 
     async def _get_kwargs_from_page(self, page):
         value = await super()._get_kwargs_from_page(page)
@@ -1128,10 +1145,10 @@ class TransactionLogMenuPages(ui.View, menus.MenuPages):
             value.update({'view': self})
         return value
     
-    async def send_initial_message(self, ctx, message):
+    async def send_initial_message(self,message):
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
-        return await message.reply(**kwargs)
+        return await message.edit(**kwargs)
     
     async def on_timeout(self):
         for child in self.children: 

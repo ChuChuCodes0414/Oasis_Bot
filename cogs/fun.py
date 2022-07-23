@@ -376,7 +376,7 @@ class Fun(commands.Cog):
                 view = ColorGame(ctx)
                 view.children[4].disabled = True
                 await message.edit(embed = embed,view = view)
-                if len(self.order) >= 20:
+                if len(order) >= 20:
                     await self.grant_badge(ctx,ctx.author.id,"color")
                 break
             
@@ -408,13 +408,7 @@ class Fun(commands.Cog):
             embed.add_field(name = "Fighting Statistics",value = f"Wins: `{wins}`\nLosses: `{loses}`\nTotal Fights: `{total}`",inline = False)
         await ctx.reply(embed = embed) 
     
-    @commands.command(hidden = True)
-    @commands.is_owner()
-    async def sync(self,ctx):
-        response = await self.client.tree.sync()
-        await ctx.send(str(response))
-        await ctx.reply("Synced")
-    
+    '''
     @app_commands.command(name="commandrequest",description = "Request a custom command!")
     async def requestcommand(self, interaction: discord.Interaction) -> None:
         ref = db.reference("/",app = firebase_admin._apps['profile'])
@@ -430,6 +424,7 @@ class Fun(commands.Cog):
         view = CommandRequestConfirm()
         await interaction.response.send_message(embed = embed, view = view, ephemeral = True)
         await view.wait()
+    '''
 
 class CommandRequestConfirm(discord.ui.View):
     def __init__(self):

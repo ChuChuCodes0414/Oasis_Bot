@@ -33,7 +33,7 @@ class Sniper(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self,guild):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
-        data = ref.child(str(guild.id)).get() or None
+        data = ref.child(str(guild.id)).get() or []
         self.settings[int(guild.id)] = [data.get("snipelb",None),data.get("snipecd",None)]
     
     @commands.Cog.listener()
@@ -74,7 +74,7 @@ class Sniper(commands.Cog):
         if max > 50:
             max = 50
         if len(self.purged_messages[messages[0].channel.id]) > max:
-            self.purged_messages[messages[0]].channel.id.pop(-1)
+            self.purged_messages[messages[0].channel.id].pop(-1)
         time = self.settings[messages[0].guild.id][1] or 30
         await asyncio.sleep(time)
         try:
@@ -124,25 +124,7 @@ class Sniper(commands.Cog):
         except:
             pass
 
-    def snipe_role_check():
-        async def predicate2(ctx):
-            if ctx.author.guild_permissions.administrator:
-                return True
-            ref = db.reference("/",app = firebase_admin._apps['settings'])
-            sniperoles = ref.child(str(ctx.message.guild.id)).child('sniper').get()
-
-            if sniperoles == None:
-                return False
-            for role in sniperoles:
-                role_ob = ctx.message.guild.get_role(role)
-                if role_ob in ctx.message.author.roles:
-                    return True
-            else:
-                return False
-        return commands.check(predicate2)
-
     @commands.command(name = 'snipe',aliases = ['sn'],help = "Snipe a recently deleted message!")
-    @snipe_role_check()
     async def snipe(self,ctx,index = 1,channel:discord.TextChannel = None):
         channel = channel or ctx.channel
         index -= 1
@@ -179,7 +161,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = emb)
 
     @commands.command(aliases = ['ms'],help = "Just how many messages that were deleted are hiding in this channel? Find out with this command.")
-    @snipe_role_check()
     async def maxsnipe(self,ctx):
         try:
             messages = len(self.sniped_messages[ctx.channel.id])
@@ -188,7 +169,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = discord.Embed(description = f"There are a total of `{messages}` messages hiding in this channel!",color = discord.Color.random()))
 
     @commands.command(name = 'esnipe',aliases = ['esn'],help = "Snipe a recently edited message!")
-    @snipe_role_check()
     async def esnipe(self,ctx,index = 1,channel:discord.TextChannel = None):
         channel = channel or ctx.channel
         index -= 1
@@ -208,7 +188,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = emb)
 
     @commands.command(aliases = ['mes'],help = "Just how many messages that were edited are hiding in this channel? Find out with this command.")
-    @snipe_role_check()
     async def maxesnipe(self,ctx):
         try:
             messages = len(self.edited_messages[ctx.channel.id])
@@ -217,7 +196,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = discord.Embed(description = f"There are a total of `{messages}` edited messages hiding in this channel!",color = discord.Color.random()))
 
     @commands.command(name = 'rsnipe',aliases = ['rsn'],help = "Snipe a recently removed reaction!")
-    @snipe_role_check()
     async def rsnipe(self,ctx,index = 1,channel:discord.TextChannel = None):
         channel = channel or ctx.channel
         index -= 1
@@ -236,7 +214,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = emb)
 
     @commands.command(aliases = ['mrs'],help = "Just how many messages that were edited are hiding in this channel? Find out with this command.")
-    @snipe_role_check()
     async def maxrsnipe(self,ctx):
         try:
             reactions = len(self.removed_reactions[ctx.channel.id])
@@ -245,7 +222,6 @@ class Sniper(commands.Cog):
         await ctx.reply(embed = discord.Embed(description = f"There are a total of `{reactions}` removed reactions hiding in this channel!",color = discord.Color.random()))
 
     @commands.command(aliases = ['psn'],help = "Snipe the list of recently purged messages!")
-    @snipe_role_check()
     async def psnipe(self,ctx,index = 1,channel:discord.TextChannel = None):
         channel = channel or ctx.channel
         index -= 1
@@ -277,7 +253,6 @@ class Sniper(commands.Cog):
         return await ctx.reply(embed = emb)
 
     @commands.command(aliases = ['mps'],help = "Just how many messages that were purged are hiding in this channel? Find out with this command. You can use `o!psnipe [index]` to reveal them.")
-    @snipe_role_check()
     async def maxpsnipe(self,ctx):
         try:
             messages = len(self.purged_messages[ctx.channel.id])

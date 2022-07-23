@@ -729,37 +729,14 @@ class SniperSettings(discord.ui.View):
         return interaction.user == self.ctx.author
     
     async def generate_embed(self):
-        sniper,snipelb,snipecd = self.guild_settings.get("sniper",None),self.guild_settings.get("snipelb",None),self.guild_settings.get("snipecd",None)
+        snipelb,snipecd = self.guild_settings.get("snipelb",None),self.guild_settings.get("snipecd",None)
         embed = discord.Embed(title = f"Server Sniper Settings for {self.ctx.guild.name}")
-        if sniper:
-            res = ""
-            for role in sniper:
-                res += "\n<@&" + str(role) + ">"
-            embed.add_field(name = "Sniper Roles",value = f"{res}")
-        else:
-            embed.add_field(name = "Sniper Roles",value = f"None")
 
         embed.add_field(name = "Snipe Lookback",value = f"{snipelb}")
         embed.add_field(name = "Snipe Cooldown",value = f"{snipecd}")
     
         embed.set_footer(text = "Use the menu buttons below to configure server settings.")
         return embed
-    
-    @discord.ui.button(label='Sniper Roles',style = discord.ButtonStyle.gray)
-    async def setsniper(self, interaction: discord.Interaction, button: discord.ui.Button):
-        view = SetupRoles(self.ctx,self.guild_settings.get("sniper",[]),self.message,"Sniper")
-        embed = await view.formatrolesembed()
-        if len(self.guild_settings.get("sniper",[])) >= 5:
-            view.children[0].disabled = True
-        await interaction.response.edit_message(embed = embed,view = view)
-        timeout = await view.wait()
-        if timeout:
-            for child in self.children: 
-                child.disabled = True   
-            await self.message.edit(view=self) 
-        self.guild_settings["sniper"] = view.roles
-        embed = await self.generate_embed()
-        await self.message.edit(embed = embed,view = self)
     
     @discord.ui.button(label = "Snipe Lookback",style = discord.ButtonStyle.gray)
     async def setsnipelb(self, interaction: discord.Interaction, button: discord.ui.Button):

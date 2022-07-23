@@ -15,10 +15,8 @@ class LoggingError(commands.Cog):
 
     async def send_error_embed(self,ctx,message):
         embed = discord.Embed(description = message,color = discord.Color.red())
-        embed.timestamp = datetime.datetime.now()
-        embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.guild.icon)
         try:
-            await ctx.reply(embed= embed)
+            await ctx.reply(embed= embed,ephemeral = True)
         except:
             try:
                 await ctx.send(embed= embed)
@@ -96,8 +94,6 @@ class LoggingError(commands.Cog):
 
         if isinstance(error, commands.UserInputError):
             embed = discord.Embed(title = f'⚠ Invalid Input',description = f'**Command Usage:** {self.get_command_signature(ctx.command,ctx)}\n**Command Information:** {ctx.command.help}',color = discord.Color.red())
-            embed.timestamp = datetime.datetime.now()
-            embed.set_footer(text = f'{ctx.guild.name}',icon_url = ctx.message.channel.guild.icon)
             try:
                 await ctx.reply(embed = embed)
             except:
@@ -114,6 +110,9 @@ class LoggingError(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             await self.send_error_embed(ctx,"Looks like you don't have permission to do that here.")
             return
+        
+        if isinstance(error, discord.app_commands.CommandInvokeError):
+            error = error.original
 
         if isinstance(error,discord.Forbidden):
             await self.send_error_embed(ctx,"Looks like I am missing permissions to complete your command.")
@@ -142,7 +141,7 @@ class LoggingError(commands.Cog):
         if isinstance(error,genshin.errors.GenshinException):
             await self.send_error_embed(ctx,error.msg)
             return
-
+        
         embed = discord.Embed(title = "Uh oh! Seems like you got an uncaught excpetion.",description = "I have no idea how you got here, but it seems your error was not traced! If this occurs frequently, please feel free to join the [support server](https://discord.com/invite/9pmGDc8pqQ) and report the bug!",color = discord.Color.red())
         if len(''.join(traceback.format_exception_only(type(error), error))) < 4000:
             embed.add_field(name = "Error Details:",value = f"```{''.join(traceback.format_exception_only(type(error), error))}```")
@@ -184,7 +183,6 @@ class LoggingError(commands.Cog):
         
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
 
 
 async def setup(client):

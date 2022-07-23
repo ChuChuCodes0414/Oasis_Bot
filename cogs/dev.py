@@ -243,6 +243,19 @@ class Dev(commands.Cog):
         except:
             await ctx.reply(title = "User Blacklisted!",description = f"Unblacklisted {user.mention} (`{user.id}`)\n\nReason: {reason}\n\nI could not dm the user!")
         await self.log_blacklist(user.id,reason or "None Given",ctx.author.id)
+    
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def sync(self,ctx):
+        response = await self.client.tree.sync()
+        await ctx.reply("Synced")
+    
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def syncguild(self,ctx):
+        guild = self.client.get_guild(870125583886065674)
+        response = await self.client.tree.sync(guild = guild)
+        await ctx.reply("Synced")
 
     @commands.command(hidden = True)
     @commands.is_owner()

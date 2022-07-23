@@ -51,9 +51,15 @@ hoyoverse_app = firebase_admin.initialize_app(cred_obj_hoyoverse , {
     'databaseURL':sensitive.HOYOVERSE_LINK
     },name="hoyoverse")
 
+cred_obj_afk = sensitive.CRED_OBJ_AFK
+afk_app = firebase_admin.initialize_app(cred_obj_afk , {
+    'databaseURL':sensitive.AFK_LINK
+    },name="afk")
+
 class Client(commands.Bot):
     def __init__(self):
         self.beta = False
+        self.maintenance = False
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
@@ -94,7 +100,7 @@ client = Client()
 
 @client.check
 def global_check(ctx):
-    if ctx.author.id != 570013288977530880 and client.maintenance:
+    if client.maintenance and ctx.author.id != 570013288977530880:
         return False
     ref1 = db.reference("/",app = firebase_admin._apps['profile'])
     bl = ref1.child(str(ctx.author.id)).child("blacklist").get()

@@ -63,7 +63,7 @@ class Channels(commands.Cog):
                 except:
                     error.append(channel)
         if len(error) >= 1:
-            des = "\n".join([x.mention for x in error])
+            des = "\n".join([x for x in error])
             embed = discord.Embed(title = "Server Locked Down",description = f"Could not lock:\n{error}",color = discord.Color.green())
         else:
             embed = discord.Embed(title = "Server Locked Down",description = f"All channels successfully locked!",color = discord.Color.green())
@@ -118,7 +118,7 @@ class Channels(commands.Cog):
                 except:
                     error.append(channel)
         if len(error) >= 1:
-            des = "\n".join([x.mention for x in error])
+            des = "\n".join([x for x in error])
             embed = discord.Embed(title = "Server Unlocked",description = f"Could not unlock:\n{error}",color = discord.Color.green())
         else:
             embed = discord.Embed(title = "Server Unlocked",description = f"All channels successfully unlocked!",color = discord.Color.green())
