@@ -80,6 +80,8 @@ class PrivateChannels(commands.Cog):
         channels = ref.child(str(ctx.message.guild.id)).child(str(channel)).get()
         if channels == None:
             return "Does not look like this channel is set up."
+        if member == channels[1]:
+            return "You cannot remove the owner from this channel!"
         if member in channels:
             channels.remove(member)
             ref.child(str(ctx.message.guild.id)).child(str(channel)).set(channels)
@@ -164,7 +166,7 @@ class PrivateChannels(commands.Cog):
                             await channel_object.send(embed = embed)
                             build += f"<#{channel}>\n"
                 else:
-                    error += f"\n{channel}\n"
+                    error += f"\n{channel}"
                 await asyncio.sleep(0.5)
         embed = discord.Embed(title = f"Private Channels that were Fixed for {member.name}",description = ownerbuild + build + error,color = discord.Color.random())
         embed.timestamp = datetime.datetime.now()
@@ -247,7 +249,20 @@ class PrivateChannels(commands.Cog):
         else:
             embed = discord.Embed(description = "It does not seem like this channel has been set up!",color = discord.Color.red())
             return await ctx.reply(embed = embed)
-            
+    
+    @commands.command(help = "Remove private channel data.")
+    @commands.has_permissions(administrator= True)
+    async def deletechannel(self,ctx,channel:discord.TextChannel = None):
+        channel = channel or ctx.channel
+        ref = db.reference("/",app = firebase_admin._apps['pepegabot'])
+        channeldata = ref.child(str(ctx.message.guild.id)).child(str(channel.id)).get()
+
+        if not channeldata:
+            return await ctx.reply(embed = discord.Embed(description = "This channel does not exsist in my database!",color = discord.Color.red()))
+        
+        ref.child(str(ctx.message.guild.id)).child(str(channel.id)).delete()
+        await ctx.reply(embed = discord.Embed(description = f"Removed all data I have stored for {channel.mention}\nThis does not remove any exsisting overrides!",color = discord.Color.green()))
+
 
 async def setup(client):
     await client.add_cog(PrivateChannels(client))

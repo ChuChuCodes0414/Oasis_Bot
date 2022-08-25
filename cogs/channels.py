@@ -5,6 +5,8 @@ from firebase_admin import db
 import asyncio
 import datetime
 from utils import timing
+from discord import app_commands
+
 class Channels(commands.Cog):
     """
         Channel management, with various commands. Most of these commands require manage permissions perms.
@@ -17,9 +19,11 @@ class Channels(commands.Cog):
     async def on_ready(self):
         print('Channels Cog Loaded.')
     
-    @commands.command(aliases = ['ld'],help = "Lockdown the server based on the channels that you have added.")
+    @commands.hybrid_command(aliases = ['ld'],help = "Lockdown the server based on the channels that you have added.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions = True)
     @commands.cooldown(1, 20,commands.BucketType.user)
+    @app_commands.describe(text = "What message to send in the lockdown notification.")
     async def lockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if ref.child(str(ctx.guild.id)).child("lockdown").get():
@@ -72,9 +76,11 @@ class Channels(commands.Cog):
         ref.child(str(ctx.guild.id)).child("lockdown").set(True)
         await message.reply(embed = embed)
     
-    @commands.command(aliases = ['uld'],help = "End the lockdown on the server based on the channels that you have added.")
+    @commands.hybrid_command(aliases = ['uld'],help = "End the lockdown on the server based on the channels that you have added.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions = True)
     @commands.cooldown(1, 20,commands.BucketType.user)
+    @app_commands.describe(text = "What message to send in the unlockdown notification.")
     async def unlockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if not ref.child(str(ctx.guild.id)).child("lockdown").get():
@@ -127,9 +133,11 @@ class Channels(commands.Cog):
         ref.child(str(ctx.guild.id)).child("lockdown").set(False)
         await message.reply(embed = embed)
     
-    @commands.command(aliases = ['vld'],help = "View lockdown the server based on the channels that you have added.",brief = "Removes view access to channels for the role you setup.")
+    @commands.hybrid_command(aliases = ['vld'],help = "View lockdown the server based on the channels that you have added.",documentation = "Removes view access to channels for the role you setup.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions = True)
     @commands.cooldown(1, 20,commands.BucketType.user)
+    @app_commands.describe(text = "What message to send in the lockdown notification.")
     async def viewlockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if ref.child(str(ctx.guild.id)).child("vlockdown").get():
@@ -182,9 +190,11 @@ class Channels(commands.Cog):
         ref.child(str(ctx.guild.id)).child("vlockdown").set(True)
         await message.reply(embed = embed)
     
-    @commands.command(aliases = ['vuld'],help = "Remove the view lockdown the server based on the channels that you have added.",brief = "Allows view access to channels for the role you setup.")
+    @commands.hybrid_command(aliases = ['vuld'],help = "Remove the view lockdown the server based on the channels that you have added.",documentation = "Allows view access to channels for the role you setup.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions = True)
     @commands.cooldown(1, 20,commands.BucketType.user)
+    @app_commands.describe(text = "What message to send in the unlockdown notification.")
     async def viewunlockdown(self,ctx,*,text:str = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
         if not ref.child(str(ctx.guild.id)).child("vlockdown").get():
@@ -237,11 +247,14 @@ class Channels(commands.Cog):
         ref.child(str(ctx.guild.id)).child("vlockdown").set(False)
         await message.reply(embed = embed)
 
-    @commands.command(aliases = ['l'],help ="Lock a specified channel for everyone, or only a certain role.")
+    @commands.hybrid_command(aliases = ['l'],help ="Lock a specified channel for everyone, or only a certain role.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions= True)
-    async def lock(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to lock the channel for.")
+    @app_commands.describe(channel = "What channel to lock.")
+    async def lock(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.send_messages == False:
@@ -252,26 +265,32 @@ class Channels(commands.Cog):
         embed.set_footer(text = "Run [prefix]unlock [role] [channel] to unlock it again!")
         await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['nu'],help ="Set speaking perms for a role in a channel to neutral.")
+    @commands.hybrid_command(aliases = ['nu'],help ="Set speaking perms for a role in a channel to neutral.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions= True)
-    async def neutral(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to set the channel nuetral for.")
+    @app_commands.describe(channel = "What channel change permissions in.")
+    async def neutral(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.send_messages == None:
             return await ctx.send(embed = discord.Embed(description = f"Channel {channel.mention} is already set to neutral for {role.mention}!",color = discord.Color.red()))
         overwrite.send_messages = None
         await channel.set_permissions(role, overwrite=overwrite)
-        embed = discord.Embed(description = f"🔒 Channel {channel.mention} set to neutral {role.mention}",color = discord.Color.green())
+        embed = discord.Embed(description = f"🔒 Channel {channel.mention} set to neutral for {role.mention}",color = discord.Color.green())
         embed.set_footer(text = "Run [prefix]lock [role] [channel] to lock it again!")
         await ctx.reply(embed = embed)
     
-    @commands.command(aliases = ['ul'],help ="Unlock a specified channel for everyone, or only a certain role.")
+    @commands.hybrid_command(aliases = ['ul'],help ="Unlock a specified channel for everyone, or only a certain role.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_permissions= True)
-    async def unlock(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to unlock the channel for.")
+    @app_commands.describe(channel = "What channel to unlock.")
+    async def unlock(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.send_messages == True:
@@ -282,11 +301,14 @@ class Channels(commands.Cog):
         embed.set_footer(text = "Run [prefix]lock [role] [channel] to lock it again!")
         await ctx.reply(embed = embed)
 
-    @commands.command(help ="Lock the view of a specified channel for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to false/red in a channel.")
+    @commands.hybrid_command(help ="Lock the view of a specified channel for everyone, or only a certain role.",documentation = "This is the same as setting \"View Channel\" perms to false/red in a channel.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_permissions(manage_permissions= True)
-    async def viewlock(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to lock the channel for.")
+    @app_commands.describe(channel = "What channel to lock.")
+    async def viewlock(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.view_channel == False:
@@ -297,11 +319,14 @@ class Channels(commands.Cog):
         embed.set_footer(text = "Run [prefix]viewunlock [role] [channel] to unlock it again!")
         await ctx.reply(embed = embed)
 
-    @commands.command(help ="Set the view of a specified channel to neutral for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to neutral/gray in a channel.")
+    @commands.hybrid_command(help ="Set the view of a specified channel to neutral for everyone, or only a certain role.",documentation = "This is the same as setting \"View Channel\" perms to neutral/gray in a channel.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_permissions(manage_permissions= True)
-    async def viewneutral(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to set the channel nuetral for.")
+    @app_commands.describe(channel = "What channel change permissions in.")
+    async def viewneutral(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.view_channel == None:
@@ -312,27 +337,33 @@ class Channels(commands.Cog):
         embed.set_footer(text = "Run [prefix]viewlock [role] [channel] to lock it again!")
         await ctx.reply(embed = embed)
 
-    @commands.command(help ="Unlock the view of a specified channel for everyone, or only a certain role.",brief = "This is the same as setting \"View Channel\" perms to true/green in a channel.")
+    @commands.hybrid_command(help ="Unlock the view of a specified channel for everyone, or only a certain role.",documentation = "This is the same as setting \"View Channel\" perms to true/green in a channel.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_permissions(manage_permissions= True)
-    async def viewunlock(self,ctx, role : discord.Role = "all",channel : discord.TextChannel=None):
+    @app_commands.describe(role = "What role to unlock the channel for.")
+    @app_commands.describe(channel = "What channel to unlock.")
+    async def viewunlock(self,ctx, role : discord.Role = None,channel : discord.TextChannel=None):
         channel = channel or ctx.channel
-        if role == "all":
+        if not role:
             role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
         if overwrite.view_channel == True:
             return await ctx.send(embed = discord.Embed(description = f"Channel {channel.mention} is already viewunlocked for {role.mention}!",color = discord.Color.red()))
         overwrite.view_channel = True
         await channel.set_permissions(role, overwrite=overwrite)
-        embed=discord.Embed(description=f"🔓 Channel {channel.mention} viewunocked for {role.mention}",color = discord.Color.red())
+        embed=discord.Embed(description=f"🔓 Channel {channel.mention} viewunlocked for {role.mention}",color = discord.Color.red())
         embed.set_footer(text = "Run [prefix]viewlock [role] [channel] to lock it again!")
         await ctx.reply(embed = embed)
 
-    @commands.command(help ="Start a dank member bot heist that has a requirement with channel management."
-    ,brief = "This command will lock the view of the channel for the default role (can be set up in settings) and allow the specified role requirement to view the channel. You can specify if the heist is long (over 10mil) or short (under 10mil), if you do not specify default is short. At the end of heist, channel will be visible to default role you specify again.")
+    @commands.hybrid_command(help ="Start a dank member bot heist that has a requirement with channel management."
+    ,documentation = "This command will lock the view of the channel for the default role (can be set up in settings) and allow the specified role requirement to view the channel. You can specify if the heist is long (over 10mil) or short (under 10mil), if you do not specify default is short. At the end of heist, channel will be visible to default role you specify again.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_permissions(manage_permissions= True)
-    async def dankheist(self,ctx,role:discord.Role,length = "short"):
+    @app_commands.describe(role = "The role requirement for the heist")
+    @app_commands.describe(length = "For small heists use 'short', long heists use 'long'")
+    async def dankheist(self,ctx,role:discord.Role,length = None):
         ref = db.reference("/",app = firebase_admin._apps['settings'])
-        if length == "short":
+        if not length or length == "short":
             length = 1.5
         elif length == "long":
             length = 4
@@ -407,20 +438,28 @@ class Channels(commands.Cog):
 
         await ctx.send(f"The heist is now over, and channel is visible to everyone again.")
 
-    @commands.command(aliases = ['mtc'],help ="Make a text channel in a certain or the current category.")
+    @commands.hybrid_command(aliases = ['mtc'],help ="Make a text channel in a certain or the current category.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_channels= True)
+    @app_commands.describe(name = "What to name your new channel.")
+    @app_commands.describe(category = "What category to put your new channel in.")
     async def maketextchannel(self,ctx,name, category: discord.CategoryChannel=None):
         channel = await ctx.guild.create_text_channel(name,overwrites=None, category=category, reason=None)
         await ctx.reply(embed = discord.Embed(description = f'Channel Created {channel.mention}',color = discord.Color.green()))
     
-    @commands.command(aliases = ['mvc'],help ="Make a voice channel in a certain or the current category.")
+    @commands.hybrid_command(aliases = ['mvc'],help ="Make a voice channel in a certain or the current category.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_channels= True)
+    @app_commands.describe(name = "What to name your new channel.")
+    @app_commands.describe(category = "What category to put your new channel in.")
     async def makevoicechannel(self,ctx,name, category: discord.CategoryChannel=None):
         channel = await ctx.guild.create_voice_channel(name,overwrites=None, category=category, reason=None)
         await ctx.reply(embed = discord.Embed(description = f'Voice Channel Created {channel.mention}',color = discord.Color.green()))
 
-    @commands.command(aliases = ['sm'],help ="Change the slowmode of the current channel to the specified amount of seconds.")
+    @commands.hybrid_command(aliases = ['sm'],help ="Change the slowmode of the current channel to the specified amount of seconds.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_guild_permissions(manage_channels= True)
+    @app_commands.describe(time = "What time to set the slowmode to.")
     async def slowmode(self,ctx,time):
         time = timing.timeparse(str(time),0,21600)
         if isinstance(time,str):
@@ -428,8 +467,10 @@ class Channels(commands.Cog):
         await ctx.channel.edit(slowmode_delay=time.seconds)
         await ctx.reply(f"Set the slowmode delay in this channel to `{time}` seconds!")
 
-    @commands.command(help ="Purge messages in the channel.")
+    @commands.hybrid_command(help ="Purge messages in the channel.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @commands.has_permissions(manage_messages= True)
+    @app_commands.describe(amount = "How many messages to be purged")
     async def purge(self,ctx, amount:int):
         await ctx.channel.purge(limit= amount+1)
         await ctx.send(f'Purged {amount} messages!', delete_after = 3)
@@ -441,6 +482,10 @@ class ConfirmationView(discord.ui.View):
         self.value = None
         self.message = None
 
+    async def on_timeout(self):
+        for child in self.children: 
+            child.disabled = True   
+        await self.message.edit(view=self) 
     
     async def interaction_check(self, interaction):
         if interaction.user == self.ctx.author:

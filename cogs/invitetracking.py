@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import firebase_admin
 from firebase_admin import db
 from discord.errors import Forbidden
@@ -8,7 +9,7 @@ import datetime
 from asyncio import sleep
 import time
 
-class Invites(commands.Cog):
+class InviteTracking(commands.Cog):
     '''
         Tracks invites for your server, and logs them too. Note this cannot track vanity invites.
         \n**Setup for this Category**
@@ -53,7 +54,7 @@ class Invites(commands.Cog):
         emb = discord.Embed(title=f"{member} has Joined the Server!",description = f"{build}",
                                 color=discord.Color.green())
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'OAsis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -96,7 +97,7 @@ class Invites(commands.Cog):
         emb = discord.Embed(title=f"{member} has left the Server!",description = f"{build}",
                                 color=discord.Color.red())
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await channel.send(embed = emb)
 
@@ -216,7 +217,9 @@ class Invites(commands.Cog):
         await self.tracker.cache_invites()
         await ctx.reply("Cached Invites")
 
-    @commands.command(help = "How many invites do you have? And who invited you?")
+    @commands.hybrid_command(name= "invites",help = "View who invited a member, as well as their invite count.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The user to lookup information for.")
     async def invites(self,ctx,member:discord.Member = None):
         ref = db.reference("/",app = firebase_admin._apps['invites'])
 
@@ -253,12 +256,12 @@ class Invites(commands.Cog):
         emb.add_field(name = "Invites:",value = f"`{invites}`")
         emb.add_field(name = "Leaves:",value = f"`{leaves}`")
         emb.timestamp = datetime.datetime.now()
-        emb.set_footer(text = f'Serenity Bot Invite Tracking',icon_url = member.guild.icon)
+        emb.set_footer(text = f'Oasis Bot Invite Tracking',icon_url = member.guild.icon)
 
         await ctx.send(embed = emb)
         
 async def setup(client):
-    await client.add_cog(Invites(client))
+    await client.add_cog(InviteTracking(client))
 
 class InviteTracker():
     def __init__(self, bot):

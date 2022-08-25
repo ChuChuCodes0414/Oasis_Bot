@@ -63,7 +63,7 @@ class Fun(commands.Cog):
                     "My sources say no.",
                     "Outlook not so good.",
                     "Very doubtful."]
-        self.wordlist = ["claim","grab","serenity","steal","mine","give","clutch","snatch","take","swipe"]
+        self.wordlist = ["claim","grab","oasis","steal","mine","give","clutch","snatch","take","swipe"]
         super().__init__()
 
     @commands.Cog.listener()

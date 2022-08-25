@@ -1,10 +1,7 @@
-import re
 import discord
 from discord.ext import commands
-import firebase_admin
-from firebase_admin import db
+from discord import app_commands
 import datetime
-import math
 import asyncio
 from utils import timing
 
@@ -31,16 +28,28 @@ class Mod(commands.Cog):
 
             if diff.days < 30 and diff.days > 3:
                 embed=discord.Embed(title=f"⚠ Alert For {member}",description=f"`There is an account under 30 days old!`", color=discord.Color.red())
-                embed.set_thumbnail(url = member.avatar)
+                embed.set_thumbnail(url = member.avatar_url)
                 embed.add_field(name = "User Information",value = f'{member.id}\n{member.mention}',inline = True)
                 embed.add_field(name = "Account Created On",value= f'{date}',inline = True)
-                embed.timestamp = datetime.datetime.now()
+                embed.timestamp = datetime.now()
                 embed.set_footer(text = f'{member.guild.name}',icon_url = member.guild.icon)
                 channel = self.client.get_channel(825882336594886687)
-                await channel.send(embed=embed)\
+                await channel.send(embed=embed)
+    
+    @commands.hybrid_command(aliases = ['e'],help = "Echo a message into another channel.")
+    @commands.has_permissions(moderate_members = True)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(channel = "The channel to send the message into")
+    @app_commands.describe(message = "The message to send into the channel")
+    async def echo(self,ctx,channel:discord.TextChannel,*,message:str):
+        await channel.send(message, allowed_mentions= discord.AllowedMentions(everyone = False, users = True, roles = False))
+        await ctx.reply(embed = discord.Embed(description = f"<a:PB_greentick:865758752379240448> Message sent to {channel.mention}!",color = discord.Color.green()), ephemeral = True)
 
-    @commands.command(help = "Change a member's nickname.")
+    @commands.hybrid_command(help = "Change a member's nickname.")
     @commands.has_permissions(manage_nicknames = True) 
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The member to change the nickname of.")
+    @app_commands.describe(nickname = "What to change the nickname to.")
     async def setnick(self,ctx, member:discord.Member,*,nickname = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
@@ -52,8 +61,11 @@ class Mod(commands.Cog):
             await member.edit(nick=nickname)
             await ctx.reply(embed = discord.Embed(description = f"Edited {member}'s nickname to: `{nickname}`",color = discord.Color.green()))
 
-    @commands.command(help = "Give/remove a role to someone else.")
-    @commands.has_permissions(manage_roles = True) 
+    @commands.hybrid_command(help = "Give/remove a role to someone else.")
+    @commands.has_permissions(manage_roles = True)
+    @app_commands.guilds(discord.Object(id=870125583886065674)) 
+    @app_commands.describe(member = "The member to add or remove a role from.")
+    @app_commands.describe(role = "The role to add or remove.")
     async def role(self,ctx, member:discord.Member,role:discord.Role):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
@@ -69,8 +81,12 @@ class Mod(commands.Cog):
             await member.add_roles((role))
             await ctx.reply(embed = discord.Embed(description = f"Added **{role.name}** to **{member}**",color = discord.Color.green()))
     
-    @commands.command(aliases = ['to'],help = "Timeout a user through the timeout function")
+    @commands.hybrid_command(aliases = ['to'],help = "Timeout a user through the timeout function")
     @commands.has_permissions(moderate_members = True)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The member to timeout.")
+    @app_commands.describe(duration = "The duration of which to have the member timed out.")
+    @app_commands.describe(reason = "Why the timeout is being applied.")
     async def timeout(self,ctx,member:discord.Member,duration,*,reason = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
@@ -110,8 +126,11 @@ class Mod(commands.Cog):
         unix = int(until.replace(tzinfo=datetime.timezone.utc).timestamp())
         await ctx.reply(embed = discord.Embed(description = f"Timed out **{member}** until <t:{unix}:f> (<t:{unix}:R>)",color = discord.Color.green()))
 
-    @commands.command(aliases = ['uto'])
+    @commands.hybrid_command(aliases = ['uto'],help = "Remove the timeout from a member")
     @commands.has_permissions(moderate_members = True)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The member to remove the timeout from.")
+    @app_commands.describe(reason = "Why the timeout is being removed.")
     async def untimeout(self,ctx,member:discord.Member,*,reason = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
@@ -122,8 +141,11 @@ class Mod(commands.Cog):
         await member.edit(timed_out_until = None,reason = reason)
         await ctx.reply(embed = discord.Embed(description = f"Removed timeout from **{member}**",color = discord.Color.green()))
     
-    @commands.command(aliases = ['k'],help = "Kick a member from the server.")
+    @commands.hybrid_command(aliases = ['k'],help = "Kick a member from the server.")
     @commands.has_permissions(kick_members = True) 
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The member that should be kicked.")
+    @app_commands.describe(reason = "Why you are kicking this member from the server.")
     async def kick(self,ctx, member:discord.Member,*,reason = None):
         bot_top = ctx.guild.get_member(self.client.user.id)
         bot_top_ob = bot_top.top_role
@@ -145,8 +167,11 @@ class Mod(commands.Cog):
             embed = discord.Embed(description = f"**{member}** was kicked from the server\n{res}",color = discord.Color.green())
             await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['b'],help = "Ban a member from the server")
-    @commands.has_permissions(ban_members = True) 
+    @commands.hybrid_command(aliases = ['b'],help = "Ban a member from the server")
+    @commands.has_permissions(ban_members = True)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The member or user that should be banned from the server.")
+    @app_commands.describe(reason = "Why you are banning this member or user from the server.") 
     async def ban(self,ctx,member, *,reason = None):
         try:
             member = await commands.converter.MemberConverter().convert(ctx,member)
@@ -182,8 +207,10 @@ class Mod(commands.Cog):
             embed = discord.Embed(description = f"**{member}** was banned from the server\n{res}",color = discord.Color.green())
             await ctx.reply(embed = embed)
 
-    @commands.command(aliases = ['mb'],help = "Mass ban members from the server")
+    @commands.hybrid_command(aliases = ['mb'],help = "Mass ban members from the server")
     @commands.has_permissions(ban_members = True) 
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(members = "A list of members or IDS, separated by spaces.")
     async def massban(self,ctx,*,members):
         guild = ctx.guild
         members = members.split()
@@ -212,8 +239,11 @@ class Mod(commands.Cog):
         except:
             await ctx.send(embed = discord.Embed(description = f"Banned **{count}** members",color = discord.Color.green()))
 
-    @commands.command(help = "Unban a member from the server.")
+    @commands.hybrid_command(help = "Unban a member from the server.")
     @commands.has_permissions(ban_members = True) 
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(user = "The user to unban from the server.")
+    @app_commands.describe(reason = "Why this user is being unbanned from the server.")
     async def unban(self,ctx,user:discord.User,*,reason=None):
         try:
             await ctx.guild.unban(user,reason = reason)

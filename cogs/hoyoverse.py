@@ -1,6 +1,6 @@
 import discord
 from discord import ui, app_commands
-from discord.ext import commands, menus
+from discord.ext import commands, menus, tasks
 from itertools import starmap, chain
 import firebase_admin
 from firebase_admin import db
@@ -25,6 +25,7 @@ class Hoyoverse(commands.Cog):
         self.months = {1:"January",2:"February",3:"March",4:"April",5:"May",6:"June",7:"July",8:"August",9:"September",10:"October",11:"November",12:"December"}
         self.public = sensitive.publicKeyReloaded
         self.private = sensitive.privateKeyReloaded
+        self.claim_daily.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -74,12 +75,14 @@ class Hoyoverse(commands.Cog):
         return data
 
     @commands.hybrid_group(name = "hoyolab", help = "Managing account setup, and basic user commands.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     async def hoyolab(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help hoyolab` to get a list of commands.",color = discord.Color.red())
             await ctx.reply(embed = embed)
     
     @hoyolab.command(name = "rules",help = "Rules for this section of the bot.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     async def rules(self,ctx):
         embed = discord.Embed(title = "Cookies Information and Terms of Service",description = "By continuing to input cookies or use the Hoyoverse commands, you agree to these rules outlined below.")
         embed.add_field(name = "1. General Bot Rules",value = "You agree, as a user, that you will abide by all rules outlined in the `[p]rules` command.",inline = False)
@@ -92,6 +95,7 @@ class Hoyoverse(commands.Cog):
     
     @hoyolab.command(help = "Search for a user on hoyolab with a name.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(username = "The username to search for on hoyolab.")
     async def search(self,ctx,username:str):
         message = await ctx.reply(embed = discord.Embed(description = "Searching for a user...please standby.",color = discord.Color.random()))
@@ -106,6 +110,7 @@ class Hoyoverse(commands.Cog):
 
     @hoyolab.command(help = "Get the profile for a user on hoyolab.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(hoyolabid = "The Hoyolab ID on the user profile to search for.")
     async def profile(self,ctx,hoyolabid:int):
         message = await ctx.reply(embed = discord.Embed(description = "Searching for a user...please standby.",color = discord.Color.random()))
@@ -116,6 +121,7 @@ class Hoyoverse(commands.Cog):
 
     @hoyolab.command(help = "Get game accounts associated with a discord user.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check accounts.")
     async def accounts(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -134,6 +140,7 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed)
     
     @hoyolab.command(help = "Setup cookies, privacy, and other settings.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     async def setup(self,ctx):
         view = HoyoverseSetupView(ctx,self.public)
         embed = await view.generate_embed()
@@ -141,6 +148,7 @@ class Hoyoverse(commands.Cog):
         view.message = message
 
     @hoyolab.command(help = "Remove all data related to you from the bot.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     async def remove(self,ctx):
         ref = db.reference("/",app = firebase_admin._apps['hoyoverse'])
         if ref.child(str(ctx.author.id)).get():
@@ -150,6 +158,7 @@ class Hoyoverse(commands.Cog):
             await ctx.reply(embed= discord.Embed(description = f"I do not have data stored for {ctx.author.mention}!",color = discord.Color.red()))
         
     @commands.hybrid_group(help = "All Genshin Impact related commands")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     async def genshin(self,ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help genshin` to get a list of commands.",color = discord.Color.red())
@@ -157,6 +166,7 @@ class Hoyoverse(commands.Cog):
         
     @genshin.command(name = "stats",help = "Overview statistics like achievement count and days active.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def stats(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -168,7 +178,7 @@ class Hoyoverse(commands.Cog):
         uid = await client._get_uid(genshin.Game.GENSHIN)
         data = await client.get_partial_genshin_user(uid)
         view = StatsView(ctx,data,uid)
-        embed = discord.Embed(title = "Overview Statistics",description = f"UID: {uid}",color = discord.Color.random())
+        embed = discord.Embed(title = "Genshin Impact Overview Statistics",description = f"UID: {uid}",color = discord.Color.random())
         embed.add_field(name = "Achievements",value = data.stats.achievements)
         embed.add_field(name = "Days Active",value = data.stats.days_active)
         embed.add_field(name = "Characters",value = data.stats.characters)
@@ -188,6 +198,7 @@ class Hoyoverse(commands.Cog):
 
     @genshin.command(aliases = ['sa'],help = "Get sprial abyss statistics.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def spiralabyss(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -212,6 +223,7 @@ class Hoyoverse(commands.Cog):
 
     @genshin.command(aliases = ['rtn'],help = "Get real-time notes information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def realtimenotes(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -265,15 +277,17 @@ class Hoyoverse(commands.Cog):
             embed.add_field(name = "Expeditions",value = f"None",inline = False)
         await message.edit(embed = embed)
 
-    @genshin.command(help = "Redeem a code for yourself.")
+    @genshin.command(help = "Redeem a code for yourself or a friend!.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(code = "The code your want to redeem.")
     @app_commands.describe(member = "The discord member of whom you want to redeem a code for.")
     async def redeem(self,ctx,code:str,member:discord.Member = None):
         member = member or ctx.author
         data = await self.get_mihoyo_cookies(ctx,member)
         if not data:
             return
-        if member != ctx.author and await str(self.privacy_check(member)) != "public":
+        if member != ctx.author and str(await self.privacy_check(member)) != "public":
             return await ctx.reply(embed = discord.Embed(description = "User has not set their information to public!",color = discord.Color.red()))
         message = await ctx.reply(embed = discord.Embed(description = "Attempting to redeem code...please standby.",color = discord.Color.random()))
         client = genshin.Client(data)
@@ -288,6 +302,7 @@ class Hoyoverse(commands.Cog):
     
     @daily.command(help = "Claim the dailies reward for the day.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to claim dailies for.")
     async def claim(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -304,6 +319,7 @@ class Hoyoverse(commands.Cog):
     
     @daily.command(help = "Last 30 daily reward history information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def history(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -327,6 +343,7 @@ class Hoyoverse(commands.Cog):
 
     @diary.command(help = "View your monthly traveler diary information.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     @app_commands.describe(month = "The month you are looking for, to be inputted as a number.")
     async def overview(self,ctx,month:int = None,member:discord.Member = None):
@@ -347,6 +364,8 @@ class Hoyoverse(commands.Cog):
     
     @diary.command(help = "View the primogem earning logs.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 50.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def primogem(self,ctx,limit:int = None,member:discord.Member = None):
         member = member or ctx.author
@@ -367,6 +386,8 @@ class Hoyoverse(commands.Cog):
     
     @diary.command(help = "View the mora earning logs.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 50.")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def mora(self,ctx,limit:int = None,member:discord.Member = None):
         member = member or ctx.author
@@ -387,6 +408,7 @@ class Hoyoverse(commands.Cog):
 
     @genshin.command(help = "View player character data")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def characters(self,ctx,member:discord.Member = None):
         member = member or ctx.author
@@ -403,8 +425,29 @@ class Hoyoverse(commands.Cog):
         await message.edit(embed = embed,view = view)
         view.message = message
     
+    @genshin.command(help = "View player event data such as summer odyssey.")
+    @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
+    async def events(self,ctx,member:discord.Member = None):
+        member = member or ctx.author
+        data = await self.general_check(ctx,member)
+        if not data:
+            return 
+        message = await ctx.reply(embed = discord.Embed(description = "Fetching user information...please standby.",color = discord.Color.random()))
+        client = genshin.Client(data)
+        uid = await client._get_uid(genshin.Game.GENSHIN)
+        data = await client.get_genshin_activities(uid = uid)
+        view = EventView(ctx,data)
+        embed = discord.Embed(title = f"Events for {member}",description = f"Supported Events: Summertime Odyssey",color = discord.Color.random())
+        embed.set_footer(text = "Use the dropdown below to view event data!")
+        await message.edit(embed = embed,view = view)
+        view.message = message
+    
     @genshin.command(help = "View wishing data")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of wishes to pull, which is by default 2000.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def wishes(self,ctx,limit:int = 2000,member:discord.Member = None):
         member = member or ctx.author
@@ -450,6 +493,8 @@ class Hoyoverse(commands.Cog):
 
     @transactions.command(help = "View Genshin transactions for primogems.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 100.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def primogems(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
@@ -469,6 +514,8 @@ class Hoyoverse(commands.Cog):
     
     @transactions.command(help = "View Genshin transactions for crystals.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 100.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def crystals(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
@@ -488,6 +535,8 @@ class Hoyoverse(commands.Cog):
     
     @transactions.command(help = "View Genshin transactions for resin.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 100.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def resin(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
@@ -507,6 +556,8 @@ class Hoyoverse(commands.Cog):
     
     @transactions.command(help = "View Genshin transactions for artifacts.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 100.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def artifacts(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
@@ -526,6 +577,8 @@ class Hoyoverse(commands.Cog):
     
     @transactions.command(help = "View Genshin transactions for weapons.")
     @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(limit = "The amount of logs to pull, which is by default 100.")
     @app_commands.describe(member = "The discord member of whom you want to check information for.")
     async def weapons(self,ctx,limit:int = 100,member:discord.Member = None):
         member = member or ctx.author
@@ -542,6 +595,37 @@ class Hoyoverse(commands.Cog):
         formatter = TransactionLogPageSource(log,"Weapon")
         menu = TransactionLogMenuPages(formatter)
         await menu.start(message,ctx)
+    
+    @commands.hybrid_group(aliases = ["hi3"],help = "All Honkai Impact 3rd related commands")
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    async def honkaiimpact3rd(self,ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(description = "You need to specify a subcommand!\nUse `[prefix]help honkaiimpact3rd` to get a list of commands.",color = discord.Color.red())
+            await ctx.reply(embed = embed)
+    
+    @honkaiimpact3rd.command(name = "stats", help = "Overview statistics like days active and battlesuit count.")
+    @commands.cooldown(1,30,commands.BucketType.user)
+    @app_commands.guilds(discord.Object(id=870125583886065674))
+    @app_commands.describe(member = "The discord member of whom you want to check information for.")
+    async def honkaistats(self,ctx,member:discord.Member = None):
+        member = member or ctx.author
+        data = await self.general_check(ctx,member)
+        if not data:
+            return 
+        message = await ctx.reply(embed = discord.Embed(description = "Fetching user information...please standby.",color = discord.Color.random()))
+        client = genshin.Client(data)
+        uid = await client._get_uid(genshin.Game.HONKAI)
+        data = await client.get_honkai_user(uid)
+        embed = discord.Embed(title = "Honkai Impact 3rd Overview Statistics",description = f"Nickname: {data.info.nickname} | UID: {uid} | Server: {data.info.server}",color = discord.Color.random())
+        embed.add_field(name = "Level",value = data.info.level)
+        embed.add_field(name = "Battlesuits",value = data.stats.battlesuits)
+        embed.add_field(name = "SSS Battlesuits",value = data.stats.battlesuits_SSS)
+        embed.add_field(name = "Stigmata",value = data.stats.stigmata)
+        embed.add_field(name = "5-Star Stigmata",value = data.stats.stigmata_5star)
+        embed.add_field(name = "Weapons",value = data.stats.weapons)
+        embed.add_field(name = "5-Star Weapons",value = data.stats.weapons_5star)
+        embed.add_field(name = "Outfits",value = data.stats.outfits)
+        await message.edit(embed = embed)
 
 class HoyoverseSetupView(discord.ui.View):
     def __init__(self,ctx,key):
@@ -1208,6 +1292,58 @@ class TransactionLogPageSource(menus.ListPageSource):
         )
         embed.set_footer(text=f"Use the buttons below to navigate pages!") 
         return embed
+
+class EventSelect(discord.ui.Select):
+    def __init__(self,events):
+        options = [
+            discord.SelectOption(label = "Summertime Odyssey",description = "v2.8 Golden Apple Archipelago",value = "s")
+        ]
+        self.events = events
+        super().__init__(placeholder='Event Selection', min_values=0, max_values=1, options=options)
+    
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == "s":
+            embed = discord.Embed(title = "Summertime Odyssey", description = "v2.8 Golden Apple Archipelago",color = discord.Color.random())
+            embed.add_field(name = "Teleport Waypoints Unlocked",value = f"{self.events.summertime_odyssey.waypoints}/10")
+            embed.add_field(name = "Waverider Waypoints Unlocked",value = f"{self.events.summertime_odyssey.waverider_waypoints}/13")
+            embed.add_field(name = "Chests Opened",value = f"{self.events.summertime_odyssey.treasure_chests}")
+            res = ""
+            for count,data in enumerate(self.events.summertime_odyssey.surfpiercer):
+                if data.finished:
+                    res += f"#{count} Best Record: {data.time//60} min {data.time%60} seconds\n"
+                else:
+                    res += f"Surfpiercer challenge #{count} not completed!\n"
+            embed.add_field(name = "Surfpiercer",value = res,inline = False)
+            res = ""
+            for memory in self.events.summertime_odyssey.memories:
+                if memory.finished:
+                    res += f"{memory.name} finished on <t:{int(memory.finish_time.replace(tzinfo=datetime.timezone.utc).timestamp())}:f>\n"
+                else:
+                    res += f"{memory.name} not yet completed!\n"
+            embed.add_field(name = "Memories",value = res, inline = False)
+            for realm in self.events.summertime_odyssey.realm_exploration:
+                if realm.finished:
+                    embed.add_field(name = f"Phantom Realm: {realm.name}",value = f"Initial Clear On: <t:{int(realm.finish_time.replace(tzinfo=datetime.timezone.utc).timestamp())}:f>\nCompleted Successfully: {realm.success} times\nSpecial Skills Used: {realm.skills_used} times")
+            await interaction.response.edit_message(embed = embed)
+
+
+class EventView(discord.ui.View):
+    def __init__(self,ctx,data):
+        super().__init__(timeout=60)
+        self.add_item(EventSelect(data))
+        self.message = None
+        self.ctx = ctx
+    
+    async def on_timeout(self):
+        for child in self.children:
+            child.disabled = True
+        await self.message.edit(view = self)
+
+    async def interaction_check(self, interaction):
+        if interaction.user == self.ctx.author:
+            return True
+        interaction.response.send_message(embed = discord.Embed(description = "This menu is not for you!",color = discord.Color.red()))
+        return False
 
 async def setup(client):
     await client.add_cog(Hoyoverse(client))
